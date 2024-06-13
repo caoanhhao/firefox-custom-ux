@@ -42,7 +42,6 @@
     href="chrome://browser/skin/customizableui/panelUI.css"
   />
   <link rel="stylesheet" href="chrome://browser/skin/downloads/downloads.css" />
-  <link rel="stylesheet" href="chrome://browser/skin/searchbar.css" />
   <link rel="stylesheet" href="chrome://browser/skin/translations/panel.css" />
   <link rel="stylesheet" href="chrome://browser/skin/places/tree-icons.css" />
   <link rel="stylesheet" href="chrome://browser/skin/places/editBookmark.css" />
@@ -94,6 +93,7 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js"
 Services.scriptloader.loadSubScript("chrome://global/content/globalOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://global/content/editMenuOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/utilityOverlay.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-command-listeners.js", this);
 if (AppConstants.platform == "macosx") {
   Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
 }
@@ -115,9 +115,9 @@ if (AppConstants.platform == "macosx") {
   Services.scriptloader.loadSubScript("chrome://browser/content/sidebar/browser-sidebar.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabsintitlebar.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-unified-extensions.js", this);
-  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
-  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser-tab.js", this);
-  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser-tabs.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tab.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabbrowser.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabs.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/places/places-menupopup.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/autocomplete-popup.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/searchbar.js", this);
@@ -146,98 +146,93 @@ if (AppConstants.platform == "macosx") {
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
   </stringbundleset>
 
+  <!-- The event listeners are defined by _initCommandSet in browser-init.js -->
   <commandset id="mainCommandSet">
-    <command id="cmd_newNavigator" oncommand="OpenBrowserWindow()"/>
-    <command id="cmd_handleBackspace" oncommand="BrowserCommands.handleBackspace();" />
-    <command id="cmd_handleShiftBackspace" oncommand="BrowserCommands.handleShiftBackspace();" />
+    <command id="cmd_newNavigator" />
+    <command id="cmd_handleBackspace" />
+    <command id="cmd_handleShiftBackspace" />
 
-    <command id="cmd_newNavigatorTab" oncommand="BrowserCommands.openTab({ event });"/>
-    <command id="cmd_newNavigatorTabNoEvent" oncommand="BrowserCommands.openTab();"/>
-    <command id="Browser:OpenFile"  oncommand="BrowserCommands.openFileWindow();"/>
-    <command id="Browser:SavePage" oncommand="saveBrowser(gBrowser.selectedBrowser);"/>
+    <command id="cmd_newNavigatorTab" />
+    <command id="cmd_newNavigatorTabNoEvent" />
+    <command id="Browser:OpenFile" />
+    <command id="Browser:SavePage" />
 
-    <command id="Browser:SendLink"
-             oncommand="MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser);"/>
+    <command id="Browser:SendLink" />
 
-    <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
-    <command id="cmd_print" oncommand="PrintUtils.startPrintWindow(gBrowser.selectedBrowser.browsingContext);"/>
-    <command id="cmd_printPreviewToggle" oncommand="PrintUtils.togglePrintPreview(gBrowser.selectedBrowser.browsingContext);"/>
-    <command id="cmd_file_importFromAnotherBrowser" oncommand="MigrationUtils.showMigrationWizard(window, { entrypoint: MigrationUtils.MIGRATION_ENTRYPOINTS.FILE_MENU });"/>
-    <command id="cmd_help_importFromAnotherBrowser" oncommand="MigrationUtils.showMigrationWizard(window, { entrypoint: MigrationUtils.MIGRATION_ENTRYPOINTS.HELP_MENU });"/>
-    <command id="cmd_close" oncommand="BrowserCommands.closeTabOrWindow(event);"/>
-    <command id="cmd_closeWindow" oncommand="BrowserCommands.tryToCloseWindow(event)"/>
-    <command id="cmd_toggleMute" oncommand="gBrowser.toggleMuteAudioOnMultiSelectedTabs(gBrowser.selectedTab)"/>
-    <command id="cmd_CustomizeToolbars" oncommand="gCustomizeMode.enter()"/>
-    <command id="cmd_toggleOfflineStatus" oncommand="BrowserOffline.toggleOfflineStatus();"/>
-    <command id="cmd_quitApplication" oncommand="goQuitApplication(event)"/>
+    <command id="cmd_pageSetup" />
+    <command id="cmd_print" />
+    <command id="cmd_printPreviewToggle" />
+    <command id="cmd_file_importFromAnotherBrowser" />
+    <command id="cmd_help_importFromAnotherBrowser" />
+    <command id="cmd_close" />
+    <command id="cmd_closeWindow" />
+    <command id="cmd_toggleMute" />
+    <command id="cmd_CustomizeToolbars" oncommand="gCustomizeMode.enter();" />
+    <command id="cmd_toggleOfflineStatus" />
+    <command id="cmd_quitApplication" />
 
-    <command id="View:AboutProcesses" oncommand="switchToTabHavingURI('about:processes', true)"/>
-    <command id="View:PageSource" oncommand="BrowserCommands.viewSource(window.gBrowser.selectedBrowser);"/>
-    <command id="View:PageInfo" oncommand="BrowserCommands.pageInfo();"/>
-    <command id="View:FullScreen" oncommand="BrowserCommands.fullScreen();"/>
-    <command id="View:ReaderView" oncommand="AboutReaderParent.toggleReaderMode(event);"/>
-    <command id="View:PictureInPicture" oncommand="PictureInPicture.onCommand(event);"/>
-    <command id="cmd_find" oncommand="gLazyFindCommand('onFindCommand')"/>
-    <command id="cmd_findAgain" oncommand="gLazyFindCommand('onFindAgainCommand', false)"/>
-    <command id="cmd_findPrevious" oncommand="gLazyFindCommand('onFindAgainCommand', true)"/>
-    <command id="cmd_reportBrokenSite" oncommand="ReportBrokenSite.open(event);"/>
-    <command id="cmd_translate" oncommand="FullPageTranslationsPanel.open(event);"/>
+    <command id="View:AboutProcesses" />
+    <command id="View:PageSource" />
+    <command id="View:PageInfo" />
+    <command id="View:FullScreen" oncommand="BrowserCommands.fullScreen();" />
+    <command id="View:ReaderView" oncommand="AboutReaderParent.toggleReaderMode(event);" />
+    <command id="View:PictureInPicture" />
+    <command id="cmd_find" />
+    <command id="cmd_findAgain" />
+    <command id="cmd_findPrevious" />
+    <command id="cmd_reportBrokenSite" oncommand="ReportBrokenSite.open(event);" />
+    <command id="cmd_translate" />
     <!-- work-around bug 392512 -->
-    <command id="Browser:AddBookmarkAs"
-             oncommand="PlacesCommandHook.bookmarkPage();"/>
-    <command id="Browser:SearchBookmarks"
-            oncommand="PlacesCommandHook.searchBookmarks();"/>
-    <command id="Browser:BookmarkAllTabs"
-             oncommand="PlacesCommandHook.bookmarkTabs();"/>
-    <command id="Browser:Back"    oncommand="BrowserCommands.back();" disabled="true"/>
-    <command id="Browser:BackOrBackDuplicate" oncommand="BrowserCommands.back(event);" disabled="true">
+    <command id="Browser:AddBookmarkAs" />
+    <command id="Browser:SearchBookmarks" />
+    <command id="Browser:BookmarkAllTabs"/>
+    <command id="Browser:Back" disabled="true" />
+    <command id="Browser:BackOrBackDuplicate" disabled="true">
       <observes element="Browser:Back" attribute="disabled"/>
     </command>
-    <command id="Browser:Forward" oncommand="BrowserCommands.forward();" disabled="true"/>
-    <command id="Browser:ForwardOrForwardDuplicate" oncommand="BrowserCommands.forward(event);" disabled="true">
+    <command id="Browser:Forward" disabled="true" />
+    <command id="Browser:ForwardOrForwardDuplicate" disabled="true">
       <observes element="Browser:Forward" attribute="disabled"/>
     </command>
-    <command id="Browser:Stop"    oncommand="BrowserCommands.stop();" disabled="true"/>
-    <command id="Browser:Reload"  oncommand="if (event.shiftKey) BrowserCommands.reloadSkipCache(); else BrowserCommands.reload()" disabled="true"/>
-    <command id="Browser:ReloadOrDuplicate" oncommand="BrowserCommands.reloadOrDuplicate(event)" disabled="true">
+    <command id="Browser:Stop" disabled="true" />
+    <command id="Browser:Reload" disabled="true" />
+    <command id="Browser:ReloadOrDuplicate" disabled="true">
       <observes element="Browser:Reload" attribute="disabled"/>
     </command>
-    <command id="Browser:ReloadSkipCache" oncommand="BrowserCommands.reloadSkipCache()" disabled="true">
+    <command id="Browser:ReloadSkipCache" disabled="true">
       <observes element="Browser:Reload" attribute="disabled"/>
     </command>
-    <command id="Browser:NextTab" oncommand="gBrowser.tabContainer.advanceSelectedTab(1, true);"/>
-    <command id="Browser:PrevTab" oncommand="gBrowser.tabContainer.advanceSelectedTab(-1, true);"/>
-    <command id="Browser:ShowAllTabs" oncommand="gTabsPanel.showAllTabsPanel();"/>
-    <command id="cmd_fullZoomReduce"  oncommand="FullZoom.reduce()"/>
-    <command id="cmd_fullZoomEnlarge" oncommand="FullZoom.enlarge()"/>
-    <command id="cmd_fullZoomReset"   oncommand="FullZoom.reset(); FullZoom.resetScalingZoom();"/>
-    <command id="cmd_fullZoomToggle"  oncommand="ZoomManager.toggleZoom();"/>
-    <command id="cmd_gestureRotateLeft" oncommand="gGestureSupport.rotate(event.sourceEvent)"/>
-    <command id="cmd_gestureRotateRight" oncommand="gGestureSupport.rotate(event.sourceEvent)"/>
-    <command id="cmd_gestureRotateEnd" oncommand="gGestureSupport.rotateEnd()"/>
-    <command id="Browser:OpenLocation" oncommand="openLocation(event);"/>
-    <command id="Browser:RestoreLastSession" oncommand="SessionStore.restoreLastSession();" disabled="true"/>
-    <command id="Browser:NewUserContextTab" oncommand="openNewUserContextTab(event.sourceEvent);"/>
-    <command id="Browser:OpenAboutContainers" oncommand="openPreferences('paneContainers');"/>
-    <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
-    <command id="Tools:Downloads" oncommand="BrowserCommands.downloadsUI();"/>
-    <command id="Tools:Addons" oncommand="BrowserAddonUI.openAddonsMgr();"/>
-    <command id="Tools:Sanitize" oncommand="Sanitizer.showUI(window);"/>
-    <command id="Tools:PrivateBrowsing"
-      oncommand="OpenBrowserWindow({private: true});"/>
-    <command id="Browser:Screenshot" oncommand="ScreenshotsUtils.notify(window, 'shortcut')"/>
-    <command id="History:UndoCloseTab" oncommand="undoCloseTab();" data-l10n-args='{"tabCount": 1}'/>
-    <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
-    <command id="History:RestoreLastClosedTabOrWindowOrSession" oncommand="restoreLastClosedTabOrWindowOrSession();" />
-    <command id="History:SearchHistory" oncommand="PlacesCommandHook.searchHistory();"/>
+    <command id="Browser:NextTab" />
+    <command id="Browser:PrevTab" />
+    <command id="Browser:ShowAllTabs" />
+    <command id="cmd_fullZoomReduce" />
+    <command id="cmd_fullZoomEnlarge" />
+    <command id="cmd_fullZoomReset" />
+    <command id="cmd_fullZoomToggle" />
+    <command id="cmd_gestureRotateLeft" />
+    <command id="cmd_gestureRotateRight" />
+    <command id="cmd_gestureRotateEnd" />
+    <command id="Browser:OpenLocation" />
+    <command id="Browser:RestoreLastSession" disabled="true"/>
+    <command id="Browser:NewUserContextTab" />
+    <command id="Browser:OpenAboutContainers" />
+    <command id="Tools:Search" />
+    <command id="Tools:Downloads" />
+    <command id="Tools:Addons" />
+    <command id="Tools:Sanitize" />
+    <command id="Tools:PrivateBrowsing" />
+    <command id="Browser:Screenshot" />
+    <command id="History:UndoCloseTab" oncommand="undoCloseTab();" data-l10n-args='{"tabCount": 1}' />
+    <command id="History:UndoCloseWindow" />
+    <command id="History:RestoreLastClosedTabOrWindowOrSession" />
+    <command id="History:SearchHistory" />
 
-    <command id="wrCaptureCmd" oncommand="gGfxUtils.webrenderCapture();" disabled="true"/>
-    <command id="wrToggleCaptureSequenceCmd" oncommand="gGfxUtils.toggleWebrenderCaptureSequence();" disabled="true"/>
-
+    <command id="wrCaptureCmd" disabled="true"/>
+    <command id="wrToggleCaptureSequenceCmd" disabled="true"/>
+    
     <!-- Custom command -->
     <command id="cmd_copyOpenTabLink" oncommand="navigator.clipboard.writeText(gBrowser.currentURI.spec);StatusPanel._label = 'URL Copied';"/>
   </commandset>
-
 
 <commandset id="placesCommands"
             commandupdater="true"
@@ -295,16 +290,16 @@ if (AppConstants.platform == "macosx") {
          modifiers="accel" reserved="true"/>
     <key id="key_newNavigatorTab" data-l10n-id="tab-new-shortcut" modifiers="accel"
          command="cmd_newNavigatorTabNoEvent" reserved="true"/>
-    <key id="focusURLBar" data-l10n-id="location-open-shortcut" command="Tools:Search"
+    <key id="focusURLBar" data-l10n-id="location-open-shortcut" command="Browser:OpenLocation"
          modifiers="accel"/>
-    <key id="focusURLBar2" data-l10n-id="location-open-shortcut-alt" command="Tools:Search"
+    <key id="focusURLBar2" data-l10n-id="location-open-shortcut-alt" command="Browser:OpenLocation"
          modifiers="alt"/>
 
-    <key id="key_search" data-l10n-id="search-focus-shortcut" command="Browser:OpenLocation" modifiers="accel"/>
+    <key id="key_search" data-l10n-id="search-focus-shortcut" command="Tools:Search" modifiers="accel"/>
     <key id="key_search2"
          data-l10n-id="search-focus-shortcut-alt"
          modifiers="accel"
-         command="Browser:OpenLocation"/>
+         command="Tools:Search"/>
     <key id="key_openDownloads"
          data-l10n-id="downloads-shortcut"
          modifiers="accel"
@@ -417,21 +412,20 @@ if (AppConstants.platform == "macosx") {
     <key id="key_undoCloseWindow" command="History:UndoCloseWindow" data-l10n-id="window-new-shortcut" modifiers="accel,shift"/>
 
 
-    <key id="key_selectTab1" oncommand="gBrowser.selectTabAtIndex(0, event);" key="1" modifiers="accel"/>
-    <key id="key_selectTab2" oncommand="gBrowser.selectTabAtIndex(1, event);" key="2" modifiers="accel"/>
-    <key id="key_selectTab3" oncommand="gBrowser.selectTabAtIndex(2, event);" key="3" modifiers="accel"/>
-    <key id="key_selectTab4" oncommand="gBrowser.selectTabAtIndex(3, event);" key="4" modifiers="accel"/>
-    <key id="key_selectTab5" oncommand="gBrowser.selectTabAtIndex(4, event);" key="5" modifiers="accel"/>
-    <key id="key_selectTab6" oncommand="gBrowser.selectTabAtIndex(5, event);" key="6" modifiers="accel"/>
-    <key id="key_selectTab7" oncommand="gBrowser.selectTabAtIndex(6, event);" key="7" modifiers="accel"/>
-    <key id="key_selectTab8" oncommand="gBrowser.selectTabAtIndex(7, event);" key="8" modifiers="accel"/>
-    <key id="key_selectLastTab" oncommand="gBrowser.selectTabAtIndex(-1, event);" key="9" modifiers="accel"/>
+<key id="key_selectTab1" oncommand="gBrowser.selectTabAtIndex(0, event);" key="1" modifiers="accel"/>
+<key id="key_selectTab2" oncommand="gBrowser.selectTabAtIndex(1, event);" key="2" modifiers="accel"/>
+<key id="key_selectTab3" oncommand="gBrowser.selectTabAtIndex(2, event);" key="3" modifiers="accel"/>
+<key id="key_selectTab4" oncommand="gBrowser.selectTabAtIndex(3, event);" key="4" modifiers="accel"/>
+<key id="key_selectTab5" oncommand="gBrowser.selectTabAtIndex(4, event);" key="5" modifiers="accel"/>
+<key id="key_selectTab6" oncommand="gBrowser.selectTabAtIndex(5, event);" key="6" modifiers="accel"/>
+<key id="key_selectTab7" oncommand="gBrowser.selectTabAtIndex(6, event);" key="7" modifiers="accel"/>
+<key id="key_selectTab8" oncommand="gBrowser.selectTabAtIndex(7, event);" key="8" modifiers="accel"/>
+<key id="key_selectLastTab" oncommand="gBrowser.selectTabAtIndex(-1, event);" key="9" modifiers="accel"/>
 
     <key id="key_wrCaptureCmd" key="#" modifiers="control" command="wrCaptureCmd" />
-    <key id="key_wrToggleCaptureSequenceCmd" key="^" modifiers="control" command="wrToggleCaptureSequenceCmd" />
-
+    <key id="key_wrToggleCaptureSequenceCmd" key="^" modifiers="control" command="wrToggleCaptureSequenceCmd"/>
+    
     <!-- Custom Keyset -->
-    <!-- <key id="key_copyOpenTabLink" key="#" modifiers="control" command="cmd_copyOpenTabLink" /> -->
     <key id="key_copyOpenTabLink" command="cmd_copyOpenTabLink" key="C" modifiers="accel,shift"/>
     <key id="key_selectLastTab2" oncommand="gBrowser.selectTabAtIndex(-1, event);" key="`" modifiers="accel"/>
   </keyset>
@@ -818,9 +812,6 @@ if (AppConstants.platform == "macosx") {
               data-l10n-id="sidebar-menu-synced-tabs"
               class="sync-ui-item"
               oncommand="SidebarController.show('viewTabsSidebar');"/>
-    <menuitem id="sidebar-switcher-megalist"
-              data-l10n-id="sidebar-menu-megalist"
-              oncommand="SidebarController.show('viewMegalistSidebar');"/>
     <menuseparator/>
     <!-- Extension toolbarbuttons go here. -->
     <menuseparator id="sidebar-extensions-separator"/>
@@ -829,6 +820,18 @@ if (AppConstants.platform == "macosx") {
     <menuseparator/>
     <menuitem data-l10n-id="sidebar-menu-close"
               oncommand="SidebarController.hide()"/>
+  </menupopup>
+
+  <menupopup id="sidebar-context-menu">
+    <menuitem data-l10n-id="sidebar-context-menu-manage-extension"
+              id="sidebar-context-menu-manage-extension"
+              contexttype="extension-action"/>
+    <menuitem data-l10n-id="sidebar-context-menu-remove-extension"
+              id="sidebar-context-menu-remove-extension"
+              contexttype="extension-action"/>
+    <menuitem data-l10n-id="sidebar-context-menu-report-extension"
+              id="sidebar-context-menu-report-extension"
+              contexttype="extension-action"/>
   </menupopup>
 
   <menupopup id="toolbar-context-menu"
@@ -1286,6 +1289,8 @@ if (AppConstants.platform == "macosx") {
       <menuitem id="context-translate-selection"
                 data-l10n-id="main-context-menu-translate-selection"
                 oncommand="gContextMenu.openSelectTranslationsPanel(event);"/>
+      <menu id="context-ask-chat"
+            oncommand="nsContextMenu.GenAI.handleAskChat(event)"/>
 
       <menuseparator id="frame-sep"/>
       <menu id="frame" data-l10n-id="main-context-menu-frame">
@@ -2895,52 +2900,32 @@ if (AppConstants.platform == "macosx") {
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- The commands are handled by DownloadsPanel.handleEvent -->
 <commandset commandupdater="true" events="richlistbox-select"
-            oncommandupdate="goUpdateCommand('cmd_delete');">
-  <command id="downloadsCmd_doDefault"
-           oncommand="goDoCommand('downloadsCmd_doDefault')"/>
-  <command id="downloadsCmd_pauseResume"
-           oncommand="goDoCommand('downloadsCmd_pauseResume')"/>
-  <command id="downloadsCmd_cancel"
-           oncommand="goDoCommand('downloadsCmd_cancel')"/>
-  <command id="downloadsCmd_unblock"
-           oncommand="goDoCommand('downloadsCmd_unblock')"/>
-  <command id="downloadsCmd_chooseUnblock"
-           oncommand="goDoCommand('downloadsCmd_chooseUnblock')"/>
-  <command id="downloadsCmd_unblockAndOpen"
-           oncommand="goDoCommand('downloadsCmd_unblockAndOpen')"/>
-  <command id="downloadsCmd_unblockAndSave"
-           oncommand="goDoCommand('downloadsCmd_unblockAndSave')"/>
-  <command id="downloadsCmd_confirmBlock"
-           oncommand="goDoCommand('downloadsCmd_confirmBlock')"/>
-  <command id="downloadsCmd_open"
-           oncommand="goDoCommand('downloadsCmd_open')"/>
-  <command id="downloadsCmd_open:current"
-           oncommand="goDoCommand('downloadsCmd_open:current')"/>
-  <command id="downloadsCmd_open:tab"
-           oncommand="goDoCommand('downloadsCmd_open:tab')"/>
-  <command id="downloadsCmd_open:tabshifted"
-           oncommand="goDoCommand('downloadsCmd_open:tabshifted')"/>
-  <command id="downloadsCmd_open:window"
-           oncommand="goDoCommand('downloadsCmd_open:window')"/>
-  <command id="downloadsCmd_show"
-           oncommand="goDoCommand('downloadsCmd_show')"/>
-  <command id="downloadsCmd_retry"
-           oncommand="goDoCommand('downloadsCmd_retry')"/>
-  <command id="downloadsCmd_openReferrer"
-           oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
-  <command id="downloadsCmd_copyLocation"
-           oncommand="goDoCommand('downloadsCmd_copyLocation')"/>
-  <command id="downloadsCmd_clearList"
-           oncommand="goDoCommand('downloadsCmd_clearList')"/>
-  <command id="downloadsCmd_openInSystemViewer"
-           oncommand="goDoCommand('downloadsCmd_openInSystemViewer')"/>
-  <command id="downloadsCmd_alwaysOpenInSystemViewer"
-           oncommand="goDoCommand('downloadsCmd_alwaysOpenInSystemViewer')"/>
-  <command id="downloadsCmd_alwaysOpenSimilarFiles"
-           oncommand="goDoCommand('downloadsCmd_alwaysOpenSimilarFiles')"/>
-  <command id="downloadsCmd_deleteFile"
-           oncommand="goDoCommand('downloadsCmd_deleteFile')"/>
+            oncommandupdate="goUpdateCommand('cmd_delete');"
+            id="downloadPanelCommands">
+  <command id="downloadsCmd_doDefault" />
+  <command id="downloadsCmd_pauseResume" />
+  <command id="downloadsCmd_cancel" />
+  <command id="downloadsCmd_unblock" />
+  <command id="downloadsCmd_chooseUnblock" />
+  <command id="downloadsCmd_unblockAndOpen" />
+  <command id="downloadsCmd_unblockAndSave" />
+  <command id="downloadsCmd_confirmBlock" />
+  <command id="downloadsCmd_open" />
+  <command id="downloadsCmd_open:current" />
+  <command id="downloadsCmd_open:tab" />
+  <command id="downloadsCmd_open:tabshifted" />
+  <command id="downloadsCmd_open:window" />
+  <command id="downloadsCmd_show" />
+  <command id="downloadsCmd_retry" />
+  <command id="downloadsCmd_openReferrer" />
+  <command id="downloadsCmd_copyLocation" />
+  <command id="downloadsCmd_clearList" />
+  <command id="downloadsCmd_openInSystemViewer" />
+  <command id="downloadsCmd_alwaysOpenInSystemViewer" />
+  <command id="downloadsCmd_alwaysOpenSimilarFiles" />
+  <command id="downloadsCmd_deleteFile" />
 </commandset>
 
 <!-- For accessibility to screen readers, we use a label on the panel instead
@@ -3098,67 +3083,76 @@ if (AppConstants.platform == "macosx") {
          noautofocus="true"
          tabspecific="true"
          locationspecific="true"
-         aria-labelledby="translations-panel-header"
          orient="vertical">
-    <hbox class="panel-header select-translations-panel-header">
-      <html:h1 class="translations-panel-header-wrapper">
-        <html:span id="select-translations-panel-header" data-l10n-id="select-translations-panel-header">
-        </html:span>
-      </html:h1>
-      <hbox class="translations-panel-beta" role="image" aria-label="Beta">
-        <image id="select-translations-panel-beta-icon"
-               class="translations-panel-beta-icon">
-        </image>
+    <html:div id="select-translations-panel-a11y-document-wrapper"
+              role="document"
+              aria-labelledby="select-translations-panel-header"
+              aria-describedby="select-translations-panel-a11y-document-wrapper">
+      <hbox id="select-translations-panel-header-row"
+            class="panel-header select-translations-panel-content">
+        <html:h1 class="translations-panel-header-wrapper">
+          <html:span id="select-translations-panel-header" data-l10n-id="select-translations-panel-header">
+          </html:span>
+        </html:h1>
+        <hbox class="translations-panel-beta" role="image" aria-label="Beta">
+          <image id="select-translations-panel-beta-icon"
+                 class="translations-panel-beta-icon">
+          </image>
+        </hbox>
+        <toolbarbutton id="select-translations-panel-settings-button"
+                       class="panel-info-button translations-panel-settings-gear-icon"
+                       data-l10n-id="translations-panel-settings-button"
+                       tabindex="0"
+                       closemenu="none"/>
       </hbox>
-      <toolbarbutton id="select-translations-panel-settings-button"
-                     class="panel-info-button translations-panel-settings-gear-icon"
-                     data-l10n-id="translations-panel-settings-button"
-                     tabindex="0"
-                     closemenu="none"/>
-    </hbox>
-    <html:div id="select-translations-panel-init-failure-content"
-              class="translations-panel-content"
-              hidden="true">
-      <html:moz-message-bar id="select-translations-panel-init-failure-message-bar"
-                            type="error"
-                            class="select-translations-panel-message-bar"
-                            data-l10n-id="select-translations-panel-init-failure-message"
-                            data-l10n-attrs="message">
-      </html:moz-message-bar>
-    </html:div>
-    <html:div id="select-translations-panel-unsupported-language-content" hidden="true">
-      <vbox flex="1" class="select-translations-panel-content">
-        <html:moz-message-bar id="select-translations-panel-unsupported-language-message-bar"
-                              type="info"
-                              class="select-translations-panel-message-bar"
-                              data-l10n-id="select-translations-panel-unsupported-language-message-unknown"
-                              data-l10n-attrs="message">
-        </html:moz-message-bar>
-        <label id="select-translations-panel-try-another-language-label"
-               class="select-translations-panel-label"
-               data-l10n-id="select-translations-panel-try-another-language-label">
-        </label>
-        <menulist id="select-translations-panel-try-another-language"
-                  flex="1"
-                  value=""
-                  size="large"
-                  data-l10n-id="translations-panel-choose-language"
-                  aria-labelledby="select-translations-panel-try-another-language-label"
-                  noinitialselection="true">
-          <menupopup id="select-translations-panel-try-another-language-menupopup"
-                     class="translations-panel-language-menupopup-from">
-            <!-- The list of <menuitem> will be dynamically inserted. -->
-          </menupopup>
-        </menulist>
-      </vbox>
-    </html:div>
-    <html:div id="select-translations-panel-main-content">
-      <vbox class="select-translations-panel-content">
-        <hbox id="select-translations-panel-lang-selection">
+      <html:div id="select-translations-panel-init-failure-content"
+                hidden="true">
+        <hbox class="select-translations-panel-content">
+          <html:moz-message-bar id="select-translations-panel-init-failure-message-bar"
+                                type="error"
+                                class="select-translations-panel-message-bar"
+                                data-l10n-id="select-translations-panel-init-failure-message"
+                                data-l10n-attrs="message">
+          </html:moz-message-bar>
+        </hbox>
+      </html:div>
+      <html:div id="select-translations-panel-unsupported-language-content" hidden="true">
+        <vbox class="select-translations-panel-content">
+          <html:moz-message-bar id="select-translations-panel-unsupported-language-message-bar"
+                                type="info"
+                                class="select-translations-panel-message-bar"
+                                data-l10n-id="select-translations-panel-unsupported-language-message-unknown"
+                                data-l10n-attrs="message">
+          </html:moz-message-bar>
+        </vbox>
+        <vbox class="select-translations-panel-content">
+          <label id="select-translations-panel-try-another-language-label"
+                 class="select-translations-panel-label"
+                 data-l10n-id="select-translations-panel-try-another-language-label">
+          </label>
+          <menulist id="select-translations-panel-try-another-language"
+                    flex="1"
+                    value=""
+                    size="large"
+                    data-l10n-id="translations-panel-choose-language"
+                    aria-labelledby="
+                      select-translations-panel-unsupported-language-message-bar
+                      select-translations-panel-try-another-language-label
+                    "
+                    noinitialselection="true">
+            <menupopup id="select-translations-panel-try-another-language-menupopup"
+                       class="translations-panel-language-menupopup-from">
+              <!-- The list of <menuitem> will be dynamically inserted. -->
+            </menupopup>
+          </menulist>
+        </vbox>
+      </html:div>
+      <html:div id="select-translations-panel-main-content">
+        <hbox id="select-translations-panel-lang-selection" class="select-translations-panel-content">
           <vbox flex="1">
             <label id="select-translations-panel-from-label"
-                   class="select-translations-panel-label"
-                   data-l10n-id="select-translations-panel-from-label">
+                    class="select-translations-panel-label"
+                    data-l10n-id="select-translations-panel-from-label">
             </label>
             <menulist id="select-translations-panel-from"
                       flex="1"
@@ -3168,15 +3162,15 @@ if (AppConstants.platform == "macosx") {
                       aria-labelledby="select-translations-panel-from-label"
                       noinitialselection="true">
               <menupopup id="select-translations-panel-from-menupopup"
-                         class="translations-panel-language-menupopup-from">
+                          class="translations-panel-language-menupopup-from">
                 <!-- The list of <menuitem> will be dynamically inserted. -->
               </menupopup>
             </menulist>
           </vbox>
           <vbox flex="1">
             <label id="select-translations-panel-to-label"
-                   class="select-translations-panel-label"
-                   data-l10n-id="select-translations-panel-to-label">
+                    class="select-translations-panel-label"
+                    data-l10n-id="select-translations-panel-to-label">
             </label>
             <menulist id="select-translations-panel-to"
                       flex="1"
@@ -3186,68 +3180,69 @@ if (AppConstants.platform == "macosx") {
                       aria-labelledby="select-translations-panel-to-label"
                       noinitialselection="true">
               <menupopup id="select-translations-panel-to-menupopup"
-                         class="translations-panel-language-menupopup-to">
+                          class="translations-panel-language-menupopup-to">
                 <!-- The list of <menuitem> will be dynamically inserted. -->
               </menupopup>
             </menulist>
           </vbox>
         </hbox>
-      </vbox>
-      <vbox class="select-translations-panel-content">
-        <html:textarea id="select-translations-panel-text-area"
-                       class="select-translations-panel-text-area"
-                       readonly="true"
-                       tabindex="0">
-        </html:textarea>
-        <html:moz-message-bar id="select-translations-panel-translation-failure-message-bar"
-                              type="error"
-                              hidden="true"
-                              data-l10n-id="select-translations-panel-translation-failure-message"
-                              data-l10n-attrs="message">
-        </html:moz-message-bar>
-      </vbox>
-    </html:div>
-    <html:div id="select-translations-panel-footer"
-              class="panel-footer translations-panel-footer">
-      <button id="select-translations-panel-copy-button"
-              class="footer-button select-translations-panel-copy-button"
-              data-l10n-id="select-translations-panel-copy-button">
-      </button>
-      <html:moz-button-group id="select-translations-panel-footer-button-group"
-                             class="translations-panel-button-group">
-        <button id="select-translations-panel-cancel-button"
-                class="footer-button"
-                hidden="true"
-                data-l10n-id="select-translations-panel-cancel-button">
+        <vbox class="select-translations-panel-content">
+          <html:textarea id="select-translations-panel-text-area"
+                         readonly="true"
+                         tabindex="0">
+          </html:textarea>
+          <html:moz-message-bar id="select-translations-panel-translation-failure-message-bar"
+                                type="error"
+                                class="select-translations-panel-message-bar"
+                                hidden="true"
+                                data-l10n-id="select-translations-panel-translation-failure-message"
+                                data-l10n-attrs="message">
+          </html:moz-message-bar>
+        </vbox>
+      </html:div>
+      <html:div id="select-translations-panel-footer"
+                class="panel-footer">
+        <button id="select-translations-panel-copy-button"
+                class="footer-button select-translations-panel-copy-button"
+                data-l10n-id="select-translations-panel-copy-button">
         </button>
-        <button id="select-translations-panel-done-button-secondary"
-                hidden="true"
-                class="footer-button"
-                data-l10n-id="select-translations-panel-done-button">
-        </button>
-        <button id="select-translations-panel-translate-full-page-button"
-                class="footer-button"
-                data-l10n-id="select-translations-panel-translate-full-page-button">
-        </button>
-        <button id="select-translations-panel-done-button-primary"
-                class="footer-button"
-                data-l10n-id="select-translations-panel-done-button"
-                default="true">
-        </button>
-        <button id="select-translations-panel-translate-button"
-                class="footer-button"
-                data-l10n-id="select-translations-panel-translate-button"
-                hidden="true"
-                default="true"
-                disabled="true">
-        </button>
-        <button id="select-translations-panel-try-again-button"
-                class="footer-button"
-                data-l10n-id="select-translations-panel-try-again-button"
-                hidden="true"
-                default="true">
-        </button>
-      </html:moz-button-group>
+        <html:moz-button-group id="select-translations-panel-footer-button-group"
+                               class="translations-panel-button-group">
+          <button id="select-translations-panel-cancel-button"
+                  class="footer-button"
+                  hidden="true"
+                  data-l10n-id="select-translations-panel-cancel-button">
+          </button>
+          <button id="select-translations-panel-done-button-secondary"
+                  hidden="true"
+                  class="footer-button"
+                  data-l10n-id="select-translations-panel-done-button">
+          </button>
+          <button id="select-translations-panel-translate-full-page-button"
+                  class="footer-button"
+                  data-l10n-id="select-translations-panel-translate-full-page-button">
+          </button>
+          <button id="select-translations-panel-done-button-primary"
+                  class="footer-button"
+                  data-l10n-id="select-translations-panel-done-button"
+                  default="true">
+          </button>
+          <button id="select-translations-panel-translate-button"
+                  class="footer-button"
+                  data-l10n-id="select-translations-panel-translate-button"
+                  hidden="true"
+                  default="true"
+                  disabled="true">
+          </button>
+          <button id="select-translations-panel-try-again-button"
+                  class="footer-button"
+                  data-l10n-id="select-translations-panel-try-again-button"
+                  aria-describedby="select-translations-panel-translation-failure-message-bar"
+                  hidden="true"
+                  default="true">
+          </button>
+        </html:moz-button-group>
+      </html:div>
     </html:div>
   </panel>
 </html:template>
@@ -3261,7 +3256,6 @@ if (AppConstants.platform == "macosx") {
        type="arrow"
        role="alertdialog"
        noautofocus="true"
-       aria-labelledby="full-page-translations-panel-header"
        orient="vertical"
        onclick="FullPageTranslationsPanel.handlePanelButtonEvent(event)"
        onpopupshown="FullPageTranslationsPanel.handlePanelPopupShownEvent(event)"
@@ -3271,6 +3265,7 @@ if (AppConstants.platform == "macosx") {
     <panelview id="full-page-translations-panel-view-default"
                class="PanelUI-subView translations-panel-view"
                role="document"
+               aria-labelledby="full-page-translations-panel-header"
                mainview-with-header="true"
                has-custom-header="true">
       <hbox class="panel-header translations-panel-header">
@@ -3361,6 +3356,7 @@ if (AppConstants.platform == "macosx") {
     <panelview id="full-page-translations-panel-view-unsupported-language"
                class="PanelUI-subView translations-panel-view"
                role="document"
+               aria-labelledby="full-page-translations-panel-unsupported-language-header"
                has-custom-header="true">
       <hbox class="panel-header translations-panel-header">
         <image class="translations-panel-error-icon" />
@@ -3406,22 +3402,18 @@ if (AppConstants.platform == "macosx") {
     <vbox class="panel-subview-body">
       <toolbarbutton id="allTabsMenu-searchTabs"
                      class="subviewbutton"
-                     oncommand="gTabsPanel.searchTabs();"
                      data-l10n-id="all-tabs-menu-search-tabs"/>
       <toolbarbutton id="allTabsMenu-closeDuplicateTabs"
                      class="subviewbutton"
-                     oncommand="gBrowser.removeAllDuplicateTabs();"
                      data-l10n-id="all-tabs-menu-close-duplicate-tabs"/>
       <toolbarbutton id="allTabsMenu-containerTabsButton"
                      class="subviewbutton subviewbutton-nav"
                      closemenu="none"
-                     oncommand="PanelUI.showSubView('allTabsMenu-containerTabsView', this);"
                      data-l10n-id="all-tabs-menu-new-user-context"/>
       <toolbarseparator id="allTabsMenu-hiddenTabsSeparator"/>
       <toolbarbutton id="allTabsMenu-hiddenTabsButton"
                      class="subviewbutton subviewbutton-nav"
                      closemenu="none"
-                     oncommand="PanelUI.showSubView('allTabsMenu-hiddenTabsView', this);"
                      data-l10n-id="all-tabs-menu-hidden-tabs"/>
       <toolbarseparator id="allTabsMenu-tabsSeparator"/>
       <vbox id="allTabsMenu-dropIndicatorHolder">
@@ -4733,8 +4725,7 @@ if (AppConstants.platform == "macosx") {
                   </menupopup>
                 </menu>
                 <menu id="viewSidebarMenuMenu" data-l10n-id="menu-view-sidebar">
-                  <menupopup id="viewSidebarMenu" onpopupshowing="SidebarController.setMegalistMenubarVisibility(event);">
-                  </menupopup>
+                  <menupopup id="viewSidebarMenu"/>
                 </menu>
                 <menuseparator/>
                 <menu id="viewFullZoomMenu" data-l10n-id="menu-view-full-zoom">
@@ -4840,79 +4831,79 @@ if (AppConstants.platform == "macosx") {
               </menupopup>
             </menu>
 
-            <menu id="bookmarksMenu"
-                  ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
-                  ondragover="PlacesMenuDNDHandler.onDragOver(event);"
-                  ondrop="PlacesMenuDNDHandler.onDrop(event);"
-                  data-l10n-id="menu-bookmarks-menu">
-              <menupopup id="bookmarksMenuPopup"
-                        placespopup="true"
-                        is="places-popup"
-                        context="placesContext"
-                        openInTabs="children"
-                        onmouseup="BookmarksEventHandler.onMouseUp(event);"
-                        oncommand="BookmarksEventHandler.onCommand(event);"
-                        onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
-                        onpopupshowing="BookmarkingUI.onMainMenuPopupShowing(event);
-                                        if (!this.parentNode._placesView)
-                                          new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`);"
-                        tooltip="bhTooltip" popupsinherittooltip="true">
-                <menuitem id="bookmarksShowAll"
-                          command="Browser:ShowAllBookmarks"
-                          key="manBookmarkKb"
-                          data-l10n-id="menu-bookmarks-manage"/>
-                <menuseparator id="organizeBookmarksSeparator"/>
-                <menuitem id="menu_bookmarkThisPage"
-                          command="Browser:AddBookmarkAs"
-                          key="addBookmarkAsKb"
-                          data-l10n-id="menu-bookmark-tab"/>
-                <menuitem id="menu_searchBookmarks"
-                          command="Browser:SearchBookmarks"
-                          data-l10n-id="menu-bookmarks-search"/>
-                <menuitem id="menu_bookmarkAllTabs"
-                          class="show-only-for-keyboard"
-                          command="Browser:BookmarkAllTabs"
-                          key="bookmarkAllTabsKb"
-                          data-l10n-id="menu-bookmarks-all-tabs"/>
-                <menuseparator id="bookmarksToolbarSeparator"/>
-                <menu id="bookmarksToolbarFolderMenu"
-                      class="menu-iconic bookmark-item"
-                      container="true"
-                      data-l10n-id="menu-bookmarks-toolbar">
-                  <menupopup id="bookmarksToolbarFolderPopup"
-                            placespopup="true"
-                            is="places-popup"
-                            context="placesContext"
-                            onpopupshowing="if (!this.parentNode._placesView)
-                                              new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);"/>
-                </menu>
-                <menu id="menu_unsortedBookmarks"
-                      class="menu-iconic bookmark-item"
-                      container="true"
-                      data-l10n-id="menu-bookmarks-other">
-                  <menupopup id="otherBookmarksFolderPopup"
-                            placespopup="true"
-                            is="places-popup"
-                            context="placesContext"
-                            onpopupshowing="if (!this.parentNode._placesView)
-                                              new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`);"/>
-                </menu>
-                <menu id="menu_mobileBookmarks"
-                      class="menu-iconic bookmark-item"
-                      hidden="true"
-                      container="true"
-                      data-l10n-id="menu-bookmarks-mobile">
-                  <menupopup id="mobileBookmarksFolderPopup"
-                            placespopup="true"
-                            is="places-popup"
-                            context="placesContext"
-                            onpopupshowing="if (!this.parentNode._placesView)
-                                              new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`);"/>
-                </menu>
-                <menuseparator id="bookmarksMenuItemsSeparator"/>
-                <!-- Bookmarks menu items -->
-              </menupopup>
-            </menu>
+  <menu id="bookmarksMenu"
+        ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
+        ondragover="PlacesMenuDNDHandler.onDragOver(event);"
+        ondrop="PlacesMenuDNDHandler.onDrop(event);"
+        data-l10n-id="menu-bookmarks-menu">
+    <menupopup id="bookmarksMenuPopup"
+               placespopup="true"
+               is="places-popup"
+               context="placesContext"
+               openInTabs="children"
+               onmouseup="BookmarksEventHandler.onMouseUp(event);"
+               oncommand="BookmarksEventHandler.onCommand(event);"
+               onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
+               onpopupshowing="BookmarkingUI.onMainMenuPopupShowing(event);
+                               if (!this.parentNode._placesView)
+                                 new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`);"
+               tooltip="bhTooltip" popupsinherittooltip="true">
+      <menuitem id="bookmarksShowAll"
+                command="Browser:ShowAllBookmarks"
+                key="manBookmarkKb"
+                data-l10n-id="menu-bookmarks-manage"/>
+      <menuseparator id="organizeBookmarksSeparator"/>
+      <menuitem id="menu_bookmarkThisPage"
+                command="Browser:AddBookmarkAs"
+                key="addBookmarkAsKb"
+                data-l10n-id="menu-bookmark-tab"/>
+      <menuitem id="menu_searchBookmarks"
+                command="Browser:SearchBookmarks"
+                data-l10n-id="menu-bookmarks-search"/>
+      <menuitem id="menu_bookmarkAllTabs"
+                class="show-only-for-keyboard"
+                command="Browser:BookmarkAllTabs"
+                key="bookmarkAllTabsKb"
+                data-l10n-id="menu-bookmarks-all-tabs"/>
+      <menuseparator id="bookmarksToolbarSeparator"/>
+      <menu id="bookmarksToolbarFolderMenu"
+            class="menu-iconic bookmark-item"
+            container="true"
+            data-l10n-id="menu-bookmarks-toolbar">
+        <menupopup id="bookmarksToolbarFolderPopup"
+                   placespopup="true"
+                   is="places-popup"
+                   context="placesContext"
+                   onpopupshowing="if (!this.parentNode._placesView)
+                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);"/>
+      </menu>
+      <menu id="menu_unsortedBookmarks"
+            class="menu-iconic bookmark-item"
+            container="true"
+            data-l10n-id="menu-bookmarks-other">
+        <menupopup id="otherBookmarksFolderPopup"
+                   placespopup="true"
+                   is="places-popup"
+                   context="placesContext"
+                   onpopupshowing="if (!this.parentNode._placesView)
+                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`);"/>
+      </menu>
+      <menu id="menu_mobileBookmarks"
+            class="menu-iconic bookmark-item"
+            hidden="true"
+            container="true"
+            data-l10n-id="menu-bookmarks-mobile">
+        <menupopup id="mobileBookmarksFolderPopup"
+                   placespopup="true"
+                   is="places-popup"
+                   context="placesContext"
+                   onpopupshowing="if (!this.parentNode._placesView)
+                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`);"/>
+      </menu>
+      <menuseparator id="bookmarksMenuItemsSeparator"/>
+      <!-- Bookmarks menu items -->
+    </menupopup>
+  </menu>
 
             <menu id="tools-menu" data-l10n-id="menu-tools">
               <menupopup id="menu_ToolsPopup">
@@ -5062,6 +5053,8 @@ if (AppConstants.platform == "macosx") {
              data-l10n-id="tabs-toolbar"
              context="toolbar-context-menu"
              flex="1">
+
+      <hbox class="titlebar-spacer" type="pre-tabs"/>
 
       <hbox flex="1" align="end" class="toolbar-items">
         <toolbartabstop/>
@@ -5230,7 +5223,7 @@ if (AppConstants.platform == "macosx") {
               focused="true"
               pageproxystate="invalid">
           <hbox id="urlbar-background"/>
-          <hbox id="urlbar-input-container"
+          <hbox class="urlbar-input-container"
                 flex="1"
                 pageproxystate="invalid">
             <box id="remote-control-box"
@@ -5238,8 +5231,7 @@ if (AppConstants.platform == "macosx") {
                  collapsed="true">
                 <image id="remote-control-icon"/>
             </box>
-            <box id="urlbar-search-button"
-                 class="chromeclass-toolbar-additional"/>
+            <box class="chromeclass-toolbar-additional urlbar-search-button"/>
             <!-- Use onclick instead of normal popup= syntax since the popup
                  code fires onmousedown, and hence eats our favicon drag events. -->
             <box id="tracking-protection-icon-container" align="center"
@@ -5257,6 +5249,7 @@ if (AppConstants.platform == "macosx") {
               </tooltip>
             </box>
             <box id="identity-box"
+                 class="identity-box"
                  pageproxystate="invalid"
                  ondragstart="gIdentityHandler.onDragStart(event);">
               <box id="identity-icon-box"
@@ -5267,7 +5260,7 @@ if (AppConstants.platform == "macosx") {
                    onclick="gIdentityHandler.handleIdentityButtonEvent(event); PageProxyClickHandler(event);"
                    onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
                 <image id="identity-icon"/>
-                <label id="identity-icon-label" class="plain" crop="center" flex="1"/>
+                <label id="identity-icon-label" crop="center" flex="1"/>
               </box>
               <box id="identity-permission-box"
                    data-l10n-id="urlbar-permissions-granted"
@@ -5379,6 +5372,7 @@ if (AppConstants.platform == "macosx") {
               <html:input id="urlbar-scheme"
                           required="required"/>
               <html:input id="urlbar-input"
+                          class="urlbar-input"
                           anonid="input"
                           aria-controls="urlbar-results"
                           aria-autocomplete="both"
@@ -5386,8 +5380,7 @@ if (AppConstants.platform == "macosx") {
                           data-l10n-id="urlbar-placeholder"
                           data-l10n-attrs="placeholder"/>
             </moz-input-box>
-            <image id="urlbar-go-button"
-                   class="urlbar-icon"
+            <image class="urlbar-icon urlbar-go-button"
                    role="button"
                    keyNav="false"
                    onclick="gURLBar.handleCommand(event);"
@@ -5532,7 +5525,7 @@ if (AppConstants.platform == "macosx") {
     </hbox>
 
     <toolbarbutton id="nav-bar-overflow-button"
-                   class="toolbarbutton-1 chromeclass-toolbar-additional overflow-button"
+                   class="toolbarbutton-1 chromeclass-toolbar-additional"
                    delegatesanchor="true"
                    skipintoolbarset="true"
                    data-l10n-id="navbar-overflow">
@@ -5771,7 +5764,9 @@ if (AppConstants.platform == "macosx") {
 
 
 <hbox flex="1" id="browser">
-  <html:sidebar-main id="sidebar-main" flex="1" hidden="true"></html:sidebar-main>
+  <box context="sidebar-context-menu" id="sidebar-main" hidden="true">
+    <html:sidebar-main flex="1"></html:sidebar-main>
+  </box>
   <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
     <box id="sidebar-header" align="center">
       <toolbarbutton id="sidebar-switcher-target" class="tabbable" aria-expanded="false">

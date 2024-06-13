@@ -146,7 +146,7 @@
           outline: none !important;
         }
         
-        #urlbar-input-container {
+        .urlbar-input-container {
           height: var(--urlbar-height) !important;
         }
       }
