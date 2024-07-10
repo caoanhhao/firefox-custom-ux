@@ -24,7 +24,6 @@
       both "content" and "skin" packages, which bug 1385444 will unify later. -->
   <link rel="stylesheet" href="chrome://global/skin/global.css" />
 
-  <link rel="stylesheet" href="chrome://browser/content/browser.css" />
   <link
     rel="stylesheet"
     href="chrome://browser/content/downloads/downloads.css"
@@ -93,7 +92,7 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js"
 Services.scriptloader.loadSubScript("chrome://global/content/globalOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://global/content/editMenuOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/utilityOverlay.js", this);
-Services.scriptloader.loadSubScript("chrome://browser/content/browser-command-listeners.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-sets.js", this);
 if (AppConstants.platform == "macosx") {
   Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
 }
@@ -236,51 +235,31 @@ if (AppConstants.platform == "macosx") {
 
 <commandset id="placesCommands"
             commandupdater="true"
-            events="focus,sort,places"
-            oncommandupdate="PlacesUIUtils.updateCommands(window);">
-  <command id="Browser:ShowAllBookmarks"
-           oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"/>
-  <command id="Browser:ShowAllHistory"
-           oncommand="PlacesCommandHook.showPlacesOrganizer('History');"/>
+            events="focus,sort,places">
+  <script src="chrome://browser/content/places/places-commands.js" />
 
-  <command id="placesCmd_open"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_open');"/>
-  <command id="placesCmd_open:window"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_open:window');"/>
-  <command id="placesCmd_open:privatewindow"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_open:privatewindow');"/>
-  <command id="placesCmd_open:tab"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_open:tab');"/>
+  <command id="Browser:ShowAllBookmarks"/>
+  <command id="Browser:ShowAllHistory"/>
 
-  <command id="placesCmd_new:bookmark"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_new:bookmark');"/>
-  <command id="placesCmd_new:folder"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_new:folder');"/>
-  <command id="placesCmd_new:separator"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_new:separator');"/>
-  <command id="placesCmd_show:info"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_show:info');"/>
-  <command id="placesCmd_rename"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_show:info');"
-           observes="placesCmd_show:info"/>
-  <command id="placesCmd_sortBy:name"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_sortBy:name');"/>
-  <command id="placesCmd_deleteDataHost"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_deleteDataHost');"/>
-  <command id="placesCmd_createBookmark"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_createBookmark');"/>
+  <command id="placesCmd_open"/>
+  <command id="placesCmd_open:window"/>
+  <command id="placesCmd_open:privatewindow"/>
+  <command id="placesCmd_open:tab"/>
+
+  <command id="placesCmd_new:bookmark"/>
+  <command id="placesCmd_new:folder"/>
+  <command id="placesCmd_new:separator"/>
+  <command id="placesCmd_show:info"/>
+  <command id="placesCmd_sortBy:name"/>
+  <command id="placesCmd_deleteDataHost"/>
+  <command id="placesCmd_createBookmark"/>
 
   <!-- Special versions of cut/copy/paste/delete which check for an open context menu. -->
-  <command id="placesCmd_cut"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_cut');"/>
-  <command id="placesCmd_copy"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_copy');"/>
-  <command id="placesCmd_paste"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_paste');"/>
-  <command id="placesCmd_delete"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_delete');"/>
-  <command id="placesCmd_showInFolder"
-           oncommand="PlacesUIUtils.doCommand(window, 'placesCmd_showInFolder');"/>
+  <command id="placesCmd_cut"/>
+  <command id="placesCmd_copy"/>
+  <command id="placesCmd_paste"/>
+  <command id="placesCmd_delete"/>
+  <command id="placesCmd_showInFolder"/>
 </commandset>
 
   <keyset id="mainKeyset">
@@ -338,7 +317,7 @@ if (AppConstants.platform == "macosx") {
     <key keycode="VK_BACK" command="cmd_handleShiftBackspace" modifiers="shift" reserved="false"/>
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
-    <key id="goHome" keycode="VK_HOME" oncommand="BrowserCommands.home();" modifiers="alt"/>
+    <key id="goHome" keycode="VK_HOME" modifiers="alt"/>
     <key keycode="VK_F5" command="Browser:Reload"/>
     <key id="showAllHistoryKb" data-l10n-id="history-show-all-shortcut" command="Browser:ShowAllHistory" modifiers="accel,shift"/>
     <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
@@ -366,16 +345,13 @@ if (AppConstants.platform == "macosx") {
     <key id="addBookmarkAsKb" data-l10n-id="bookmark-this-page-shortcut" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="bookmarkAllTabsKb"
          data-l10n-id="bookmark-this-page-shortcut"
-         oncommand="PlacesCommandHook.bookmarkTabs();"
          modifiers="accel,shift"/>
     <key id="manBookmarkKb" data-l10n-id="bookmark-show-library-shortcut" command="Browser:ShowAllBookmarks" modifiers="accel,shift"/>
     <key id="viewBookmarksSidebarKb"
          data-l10n-id="bookmark-show-sidebar-shortcut"
-         modifiers="accel"
-         oncommand="SidebarController.toggle('viewBookmarksSidebar');"/>
+         modifiers="accel"/>
     <key id="viewBookmarksToolbarKb"
          data-l10n-id="bookmark-show-toolbar-shortcut"
-         oncommand="BookmarkingUI.toggleBookmarksToolbar('shortcut');"
          modifiers="accel,shift"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
@@ -384,7 +360,7 @@ if (AppConstants.platform == "macosx") {
     <key id="key_gotoHistory"
          data-l10n-id="history-sidebar-shortcut"
          modifiers="accel"
-         oncommand="SidebarController.toggle('viewHistorySidebar');"/>
+        />
 
     <key id="key_fullZoomReduce" data-l10n-id="full-zoom-reduce-shortcut" command="cmd_fullZoomReduce"  modifiers="accel"/>
     <key                         data-l10n-id="full-zoom-reduce-shortcut-alt-a" command="cmd_fullZoomReduce"  modifiers="accel"/>
@@ -412,112 +388,87 @@ if (AppConstants.platform == "macosx") {
     <key id="key_undoCloseWindow" command="History:UndoCloseWindow" data-l10n-id="window-new-shortcut" modifiers="accel,shift"/>
 
 
-<key id="key_selectTab1" oncommand="gBrowser.selectTabAtIndex(0, event);" key="1" modifiers="accel"/>
-<key id="key_selectTab2" oncommand="gBrowser.selectTabAtIndex(1, event);" key="2" modifiers="accel"/>
-<key id="key_selectTab3" oncommand="gBrowser.selectTabAtIndex(2, event);" key="3" modifiers="accel"/>
-<key id="key_selectTab4" oncommand="gBrowser.selectTabAtIndex(3, event);" key="4" modifiers="accel"/>
-<key id="key_selectTab5" oncommand="gBrowser.selectTabAtIndex(4, event);" key="5" modifiers="accel"/>
-<key id="key_selectTab6" oncommand="gBrowser.selectTabAtIndex(5, event);" key="6" modifiers="accel"/>
-<key id="key_selectTab7" oncommand="gBrowser.selectTabAtIndex(6, event);" key="7" modifiers="accel"/>
-<key id="key_selectTab8" oncommand="gBrowser.selectTabAtIndex(7, event);" key="8" modifiers="accel"/>
-<key id="key_selectLastTab" oncommand="gBrowser.selectTabAtIndex(-1, event);" key="9" modifiers="accel"/>
+<key id="key_selectTab1" key="1" modifiers="accel"/>
+<key id="key_selectTab2" key="2" modifiers="accel"/>
+<key id="key_selectTab3" key="3" modifiers="accel"/>
+<key id="key_selectTab4" key="4" modifiers="accel"/>
+<key id="key_selectTab5" key="5" modifiers="accel"/>
+<key id="key_selectTab6" key="6" modifiers="accel"/>
+<key id="key_selectTab7" key="7" modifiers="accel"/>
+<key id="key_selectTab8" key="8" modifiers="accel"/>
+<key id="key_selectLastTab" key="9" modifiers="accel"/>
 
-    <key id="key_wrCaptureCmd" key="#" modifiers="control" command="wrCaptureCmd" />
-    <key id="key_wrToggleCaptureSequenceCmd" key="^" modifiers="control" command="wrToggleCaptureSequenceCmd"/>
-    
-    <!-- Custom Keyset -->
-    <key id="key_copyOpenTabLink" command="cmd_copyOpenTabLink" key="C" modifiers="accel,shift"/>
-    <key id="key_selectLastTab2" oncommand="gBrowser.selectTabAtIndex(-1, event);" key="`" modifiers="accel"/>
+    <key id="key_wrCaptureCmd"
+    key="#" modifiers="control"
+    command="wrCaptureCmd"/>
+    <key id="key_wrToggleCaptureSequenceCmd"
+    key="^" modifiers="control"
+    command="wrToggleCaptureSequenceCmd"/>
   </keyset>
 
 
 <popupset id="mainPopupSet">
-  <menupopup id="tabContextMenu"
-             onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
-             onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
-    <menuitem id="context_openANewTab" data-lazy-l10n-id="tab-context-new-tab"
-              oncommand="gBrowser.addAdjacentNewTab(TabContextMenu.contextTab)"/>
+  <script src="chrome://browser/content/main-popupset.js" />
+
+  <menupopup id="tabContextMenu">
+    <menuitem id="context_openANewTab" data-lazy-l10n-id="tab-context-new-tab"/>
     <menuseparator/>
-    <menuitem id="context_reloadTab" data-lazy-l10n-id="reload-tab"
-              oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
-    <menuitem id="context_reloadSelectedTabs" data-lazy-l10n-id="reload-tabs" hidden="true"
-              oncommand="gBrowser.reloadMultiSelectedTabs();"/>
-    <menuitem id="context_playTab" data-lazy-l10n-id="tab-context-play-tab" hidden="true"
-              oncommand="TabContextMenu.contextTab.resumeDelayedMedia();"/>
-    <menuitem id="context_playSelectedTabs" data-lazy-l10n-id="tab-context-play-tabs" hidden="true"
-              oncommand="gBrowser.resumeDelayedMediaOnMultiSelectedTabs(TabContextMenu.contextTab);"/>
-    <menuitem id="context_toggleMuteTab" oncommand="TabContextMenu.contextTab.toggleMuteAudio();"/>
-    <menuitem id="context_toggleMuteSelectedTabs" hidden="true"
-              oncommand="gBrowser.toggleMuteAudioOnMultiSelectedTabs(TabContextMenu.contextTab);"/>
-    <menuitem id="context_pinTab" data-lazy-l10n-id="pin-tab"
-              oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
-    <menuitem id="context_unpinTab" data-lazy-l10n-id="unpin-tab" hidden="true"
-              oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
-    <menuitem id="context_pinSelectedTabs" data-lazy-l10n-id="pin-selected-tabs" hidden="true"
-              oncommand="gBrowser.pinMultiSelectedTabs();"/>
-    <menuitem id="context_unpinSelectedTabs" data-lazy-l10n-id="unpin-selected-tabs" hidden="true"
-              oncommand="gBrowser.unpinMultiSelectedTabs();"/>
-    <menuitem id="context_duplicateTab" data-lazy-l10n-id="duplicate-tab"
-              oncommand="duplicateTabIn(TabContextMenu.contextTab, 'tab');"/>
-    <menuitem id="context_duplicateTabs" data-lazy-l10n-id="duplicate-tabs"
-              oncommand="TabContextMenu.duplicateSelectedTabs();"/>
+    <menuitem id="context_reloadTab" data-lazy-l10n-id="reload-tab"/>
+    <menuitem id="context_reloadSelectedTabs" data-lazy-l10n-id="reload-tabs" hidden="true"/>
+    <menuitem id="context_playTab" data-lazy-l10n-id="tab-context-play-tab" hidden="true"/>
+    <menuitem id="context_playSelectedTabs" data-lazy-l10n-id="tab-context-play-tabs" hidden="true"/>
+    <menuitem id="context_toggleMuteTab" />
+    <menuitem id="context_toggleMuteSelectedTabs" hidden="true"/>
+    <menuitem id="context_pinTab" data-lazy-l10n-id="pin-tab"/>
+    <menuitem id="context_unpinTab" data-lazy-l10n-id="unpin-tab" hidden="true"/>
+    <menuitem id="context_pinSelectedTabs" data-lazy-l10n-id="pin-selected-tabs" hidden="true"/>
+    <menuitem id="context_unpinSelectedTabs" data-lazy-l10n-id="unpin-selected-tabs" hidden="true"/>
+    <menuitem id="context_duplicateTab" data-lazy-l10n-id="duplicate-tab"/>
+    <menuitem id="context_duplicateTabs" data-lazy-l10n-id="duplicate-tabs"/>
     <menuseparator/>
     <menuitem id="context_bookmarkSelectedTabs"
               hidden="true"
-              data-lazy-l10n-id="bookmark-selected-tabs"
-              oncommand="PlacesCommandHook.bookmarkTabs(gBrowser.selectedTabs);"/>
+              data-lazy-l10n-id="bookmark-selected-tabs"/>
     <menuitem id="context_bookmarkTab"
-              data-lazy-l10n-id="tab-context-bookmark-tab"
-              oncommand="PlacesCommandHook.bookmarkTabs([TabContextMenu.contextTab]);"/>
+              data-lazy-l10n-id="tab-context-bookmark-tab"/>
     <menu id="context_moveTabOptions"
           data-lazy-l10n-id="tab-context-move-tabs"
           data-l10n-args='{"tabCount": 1}'>
       <menupopup id="moveTabOptionsMenu">
         <menuitem id="context_moveToStart"
                   data-lazy-l10n-id="move-to-start"
-                  tbattr="tabbrowser-multiple-visible"
-                  oncommand="gBrowser.moveTabsToStart(TabContextMenu.contextTab);"/>
+                  tbattr="tabbrowser-multiple-visible"/>
         <menuitem id="context_moveToEnd"
                   data-lazy-l10n-id="move-to-end"
-                  tbattr="tabbrowser-multiple-visible"
-                  oncommand="gBrowser.moveTabsToEnd(TabContextMenu.contextTab);"/>
+                  tbattr="tabbrowser-multiple-visible"/>
         <menuitem id="context_openTabInWindow" data-lazy-l10n-id="move-to-new-window"
-                  tbattr="tabbrowser-multiple-visible"
-                  oncommand="gBrowser.replaceTabsWithWindow(TabContextMenu.contextTab);"/>
+                  tbattr="tabbrowser-multiple-visible"/>
       </menupopup>
     </menu>
     <menu id="context_sendTabToDevice"
           class="sync-ui-item"
           data-lazy-l10n-id="tab-context-send-tabs-to-device"
           data-l10n-args='{"tabCount": 1}'>
-      <menupopup id="context_sendTabToDevicePopupMenu"
-                 onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI, TabContextMenu.contextTab.linkedBrowser.contentTitle, TabContextMenu.contextTab.multiselected);"/>
+      <menupopup id="context_sendTabToDevicePopupMenu"/>
     </menu>
     <menu id="context_reopenInContainer"
           data-lazy-l10n-id="tab-context-open-in-new-container-tab"
           hidden="true">
-      <menupopup oncommand="TabContextMenu.reopenInContainer(event);"
-                 onpopupshowing="TabContextMenu.createReopenInContainerMenu(event);"/>
+      <menupopup id="context_reopenInContainerPopupMenu"/>
     </menu>
-    <menuitem id="context_selectAllTabs" data-lazy-l10n-id="select-all-tabs"
-              oncommand="gBrowser.selectAllTabs();"/>
+    <menuitem id="context_selectAllTabs" data-lazy-l10n-id="select-all-tabs"/>
     <menuseparator/>
     <menuitem id="context_closeTab"
               data-lazy-l10n-id="tab-context-close-n-tabs"
-              data-l10n-args='{"tabCount": 1}'
-              oncommand="TabContextMenu.closeContextTabs();"/>
+              data-l10n-args='{"tabCount": 1}'/>
     <menuitem id="context_closeDuplicateTabs"
-              data-lazy-l10n-id="tab-context-close-duplicate-tabs"
-              oncommand="gBrowser.removeDuplicateTabs(TabContextMenu.contextTab);"/>
+              data-lazy-l10n-id="tab-context-close-duplicate-tabs"/>
     <menu id="context_closeTabOptions"
           data-lazy-l10n-id="tab-context-close-multiple-tabs">
       <menupopup id="closeTabOptions">
-        <menuitem id="context_closeTabsToTheStart" data-lazy-l10n-id="close-tabs-to-the-start"
-                  oncommand="gBrowser.removeTabsToTheStartFrom(TabContextMenu.contextTab);"/>
-        <menuitem id="context_closeTabsToTheEnd" data-lazy-l10n-id="close-tabs-to-the-end"
-                  oncommand="gBrowser.removeTabsToTheEndFrom(TabContextMenu.contextTab);"/>
-        <menuitem id="context_closeOtherTabs" data-lazy-l10n-id="close-other-tabs"
-                  oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
+        <menuitem id="context_closeTabsToTheStart" data-lazy-l10n-id="close-tabs-to-the-start"/>
+        <menuitem id="context_closeTabsToTheEnd" data-lazy-l10n-id="close-tabs-to-the-end"/>
+        <menuitem id="context_closeOtherTabs" data-lazy-l10n-id="close-other-tabs"/>
       </menupopup>
     </menu>
     <menuitem id="context_undoCloseTab"
@@ -525,28 +476,23 @@ if (AppConstants.platform == "macosx") {
               data-l10n-args='{"tabCount": 1}'
               observes="History:UndoCloseTab"/>
     <menuseparator contexttype="fullscreen"/>
-    <menuitem class="fullscreen-context-autohide"
+    <menuitem id="context_fullscreenAutohide"
+              class="fullscreen-context-autohide"
               contexttype="fullscreen"
               type="checkbox"
-              data-lazy-l10n-id="full-screen-autohide"
-              oncommand="FullScreen.setAutohide();"/>
-    <menuitem contexttype="fullscreen"
-              data-lazy-l10n-id="full-screen-exit"
-              oncommand="BrowserCommands.fullScreen();"/>
+              data-lazy-l10n-id="full-screen-autohide"/>
+    <menuitem id="context_fullscreenExit"
+              contexttype="fullscreen"
+              data-lazy-l10n-id="full-screen-exit"/>
   </menupopup>
 
-  <!-- bug 415444/582485: event.stopPropagation is here for the cloned version
-       of this menupopup, to prevent already-handled clicks on menu items from
-       propagating to the back or forward button.
-  -->
-  <menupopup id="backForwardMenu"
-             onpopupshowing="return FillHistoryMenu(event.target);"
-             oncommand="BrowserCommands.gotoHistoryIndex(event); event.stopPropagation();"/>
+  <!-- This node can be cloned by SetClickAndHoldHandlers. -->
+  <menupopup id="backForwardMenu"/>
   <tooltip id="aHTMLTooltip" page="true"/>
   <tooltip id="remoteBrowserTooltip"/>
 
-  <menupopup id="new-tab-button-popup"
-             onpopupshowing="return CreateContainerTabMenu(event);"/>
+  <!-- This node can be cloned by MozTabbrowserTabs.observes. -->
+  <menupopup id="new-tab-button-popup"/>
   <!-- for search and content formfill/pw manager -->
 
   <panel is="autocomplete-richlistbox-popup"
@@ -568,13 +514,18 @@ if (AppConstants.platform == "macosx") {
          noautofocus="true"
          hidden="true" />
 
-  <html:template id="printPreviewStackTemplate">
-    <stack class="previewStack" rendering="true" flex="1" previewtype="primary">
-      <vbox class="previewRendering" flex="1">
-        <h1 class="print-pending-label" data-l10n-id="printui-loading"></h1>
-      </vbox>
-    </stack>
-  </html:template>
+  <panel id="searchmode-switcher-popup" noautofocus="true" orient="vertical" type="arrow">
+    <label data-l10n-id="urlbar-searchmode-popup-description" id="searchmode-switcher-popup-description" />
+    <toolbarseparator />
+    <vbox class="panel-subview-body"></vbox>
+    <toolbarseparator />
+    <toolbarbutton oncommand="window.openPreferences('paneSearch');"
+                   class="subviewbutton subviewbutton-iconic"
+                   id="searchmode-switcher-popup-search-settings-button">
+      <image id="searchmode-switcher-popup-search-settings-icon" />
+      <label data-l10n-id="urlbar-searchmode-popup-search-settings" />
+    </toolbarbutton>
+  </panel>
 
   <html:template id="screenshotsPagePanelTemplate">
     <box id="screenshotsPagePanel" hidden="true">
@@ -727,8 +678,7 @@ if (AppConstants.platform == "macosx") {
         <vbox id="editBookmarkPanelBottomContent"
               flex="1">
           <checkbox id="editBookmarkPanel_showForNewBookmarks"
-                    data-l10n-id="bookmark-panel-show-editor-checkbox"
-                    oncommand="StarUI.onShowForNewBookmarksCheckboxCommand();"/>
+                    data-l10n-id="bookmark-panel-show-editor-checkbox"/>
         </vbox>
         <html:moz-button-group
               class="panel-footer"
@@ -737,11 +687,9 @@ if (AppConstants.platform == "macosx") {
           <button id="editBookmarkPanelDoneButton"
                   class="footer-button"
                   data-l10n-id="bookmark-panel-save-button"
-                  default="true"
-                  oncommand="StarUI.panel.hidePopup();"/>
+                  default="true"/>
           <button id="editBookmarkPanelRemoveButton"
-                  class="footer-button"
-                  oncommand="StarUI.removeBookmarkButtonCommand();"/>
+                  class="footer-button"/>
         </html:moz-button-group>
       </vbox>
     </panel>
@@ -802,24 +750,20 @@ if (AppConstants.platform == "macosx") {
              position="bottomleft topleft">
     <menuitem id="sidebar-switcher-bookmarks"
               data-l10n-id="sidebar-menu-bookmarks"
-              key="viewBookmarksSidebarKb"
-              oncommand="SidebarController.show('viewBookmarksSidebar');"/>
+              key="viewBookmarksSidebarKb"/>
     <menuitem id="sidebar-switcher-history"
               data-l10n-id="sidebar-menu-history"
-              key="key_gotoHistory"
-              oncommand="SidebarController.show('viewHistorySidebar');"/>
+              key="key_gotoHistory"/>
     <menuitem id="sidebar-switcher-tabs"
               data-l10n-id="sidebar-menu-synced-tabs"
-              class="sync-ui-item"
-              oncommand="SidebarController.show('viewTabsSidebar');"/>
+              class="sync-ui-item"/>
     <menuseparator/>
     <!-- Extension toolbarbuttons go here. -->
     <menuseparator id="sidebar-extensions-separator"/>
-    <menuitem id="sidebar-reverse-position"
-              oncommand="SidebarController.reversePosition()"/>
+    <menuitem id="sidebar-reverse-position"/>
     <menuseparator/>
-    <menuitem data-l10n-id="sidebar-menu-close"
-              oncommand="SidebarController.hide()"/>
+    <menuitem id="sidebar-menu-close"
+              data-l10n-id="sidebar-menu-close"/>
   </menupopup>
 
   <menupopup id="sidebar-context-menu">
@@ -834,42 +778,39 @@ if (AppConstants.platform == "macosx") {
               contexttype="extension-action"/>
   </menupopup>
 
-  <menupopup id="toolbar-context-menu"
-             onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); ToolbarContextMenu.updateDownloadsAutoHide(this); ToolbarContextMenu.updateDownloadsAlwaysOpenPanel(this); ToolbarContextMenu.updateExtension(this, event)">
-    <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"
+  <menupopup id="toolbar-context-menu">
+    <menuitem id="toolbar-context-manage-extension"
               data-lazy-l10n-id="toolbar-context-menu-manage-extension"
               contexttype="toolbaritem"
               class="customize-context-manageExtension"/>
-    <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
+    <menuitem id="toolbar-context-remove-extension"
               data-lazy-l10n-id="toolbar-context-menu-remove-extension"
               contexttype="toolbaritem"
               class="customize-context-removeExtension"/>
-    <menuitem oncommand="ToolbarContextMenu.reportExtensionForContextAction(this.parentElement, 'toolbar_context_menu')"
+    <menuitem id="toolbar-context-report-extension"
               data-lazy-l10n-id="toolbar-context-menu-report-extension"
               contexttype="toolbaritem"
               class="customize-context-reportExtension"/>
     <menuseparator/>
-    <menuitem oncommand="gCustomizeMode.addToPanel(this.parentNode.triggerNode, 'toolbar-context-menu')"
+    <menuitem id="toolbar-context-move-to-panel"
               data-lazy-l10n-id="toolbar-context-menu-pin-to-overflow-menu"
               contexttype="toolbaritem"
               class="customize-context-moveToPanel"/>
     <menuitem id="toolbar-context-autohide-downloads-button"
-              oncommand="ToolbarContextMenu.onDownloadsAutoHideChange(event);"
               type="checkbox"
               data-lazy-l10n-id="toolbar-context-menu-auto-hide-downloads-button-2"
               contexttype="toolbaritem"/>
-    <menuitem oncommand="gCustomizeMode.removeFromArea(this.parentNode.triggerNode, 'toolbar-context-menu')"
+    <menuitem id="toolbar-context-remove-from-toolbar"
               data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"
               contexttype="toolbaritem"
               class="customize-context-removeFromToolbar"/>
-    <menuitem oncommand="gUnifiedExtensions.onPinToToolbarChange(this.parentElement, event);"
+    <menuitem id="toolbar-context-pin-to-toolbar"
               data-lazy-l10n-id="toolbar-context-menu-pin-to-toolbar"
               type="checkbox"
               contexttype="toolbaritem"
               class="customize-context-pinToToolbar"/>
     <menuseparator id="toolbarDownloadsAnchorMenuSeparator"/>
     <menuitem id="toolbar-context-always-open-downloads-panel"
-              oncommand="ToolbarContextMenu.onDownloadsAlwaysOpenPanelChange(event);"
               type="checkbox"
               data-lazy-l10n-id="toolbar-context-menu-always-open-downloads-panel"
               contexttype="toolbaritem"/>
@@ -880,23 +821,18 @@ if (AppConstants.platform == "macosx") {
     <menuseparator id="toolbarNavigatorItemsMenuSeparator"/>
     <menuitem id="toolbar-context-reloadSelectedTab"
               contexttype="tabbar"
-              oncommand="gBrowser.reloadMultiSelectedTabs();"
               data-lazy-l10n-id="toolbar-context-menu-reload-selected-tab"/>
     <menuitem id="toolbar-context-reloadSelectedTabs"
               contexttype="tabbar"
-              oncommand="gBrowser.reloadMultiSelectedTabs();"
               data-lazy-l10n-id="toolbar-context-menu-reload-selected-tabs"/>
     <menuitem id="toolbar-context-bookmarkSelectedTab"
               contexttype="tabbar"
-              oncommand="PlacesCommandHook.bookmarkTabs(gBrowser.selectedTabs);"
               data-lazy-l10n-id="toolbar-context-menu-bookmark-selected-tab"/>
     <menuitem id="toolbar-context-bookmarkSelectedTabs"
               contexttype="tabbar"
-              oncommand="PlacesCommandHook.bookmarkTabs(gBrowser.selectedTabs);"
               data-lazy-l10n-id="toolbar-context-menu-bookmark-selected-tabs"/>
     <menuitem id="toolbar-context-selectAllTabs"
               contexttype="tabbar"
-              oncommand="gBrowser.selectAllTabs();"
               data-lazy-l10n-id="toolbar-context-menu-select-all-tabs"/>
     <menuitem id="toolbar-context-undoCloseTab"
               contexttype="tabbar"
@@ -904,55 +840,35 @@ if (AppConstants.platform == "macosx") {
               observes="History:UndoCloseTab"/>
     <menuseparator id="toolbarItemsMenuSeparator"/>
     <menuseparator id="viewToolbarsMenuSeparator"/>
-    <!-- XXXgijs: we're using oncommand handler here to avoid the event being
-                  redirected to the command element, thus preventing
-                  listeners on the menupopup or further up the tree from
-                  seeing the command event pass by. The observes attribute is
-                  here so that the menuitem is still disabled and re-enabled
-                  correctly. -->
-    <menuitem oncommand="gCustomizeMode.enter()"
+    <menuitem id="toolbar-context-customize"
               observes="cmd_CustomizeToolbars"
               class="viewCustomizeToolbar"
               data-lazy-l10n-id="toolbar-context-menu-view-customize-toolbar-2"/>
     <menuseparator contexttype="fullscreen"/>
-    <menuitem class="fullscreen-context-autohide"
+    <menuitem id="toolbar-context-full-screen-autohide"
+              class="fullscreen-context-autohide"
               contexttype="fullscreen"
               type="checkbox"
-              data-lazy-l10n-id="full-screen-autohide"
-              oncommand="FullScreen.setAutohide();"/>
-    <menuitem contexttype="fullscreen"
-              data-lazy-l10n-id="full-screen-exit"
-              oncommand="BrowserCommands.fullScreen();"/>
+              data-lazy-l10n-id="full-screen-autohide"/>
+    <menuitem id="toolbar-context-full-screen-exit"
+              contexttype="fullscreen"
+              data-lazy-l10n-id="full-screen-exit"/>
   </menupopup>
 
-  <menupopup id="blockedPopupOptions"
-             onpopupshowing="gPopupBlockerObserver.fillPopupList(event);"
-             onpopuphiding="gPopupBlockerObserver.onPopupHiding(event);">
-    <menuitem id="blockedPopupAllowSite"
-              oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
-    <menuitem
-              data-l10n-id="edit-popup-settings"
-              oncommand="gPopupBlockerObserver.editPopupSettings();"/>
+  <menupopup id="blockedPopupOptions">
+    <menuitem id="blockedPopupAllowSite"/>
+    <menuitem id="blockedPopupEdit"
+              data-l10n-id="edit-popup-settings"/>
     <menuitem id="blockedPopupDontShowMessage"
               data-l10n-id="popups-infobar-dont-show-message"
-              type="checkbox"
-              oncommand="gPopupBlockerObserver.dontShowMessage();"/>
+              type="checkbox"/>
     <menuseparator id="blockedPopupsSeparator"/>
   </menupopup>
 
   <menupopup id="contentAreaContextMenu"
-             showservicesmenu="true"
-             onpopupshowing="if (event.target != this)
-                               return true;
-                             gContextMenu = new nsContextMenu(this, event.shiftKey);
-                             if (gContextMenu.shouldDisplay)
-                               updateEditUIVisibility();
-                             return gContextMenu.shouldDisplay;"
-             onpopuphiding="if (event.target != this)
-                              return;
-                            gContextMenu.hiding(this);
-                            gContextMenu = null;
-                            updateEditUIVisibility();">
+             showservicesmenu="true">
+
+<script src="chrome://browser/content/browser-context.js" hidden="true" />
 
       <menugroup id="context-navigation">
         <menuitem id="context-back"
@@ -978,42 +894,42 @@ if (AppConstants.platform == "macosx") {
         <menuitem id="context-bookmarkpage"
                   class="menuitem-iconic"
                   data-l10n-id="main-context-menu-bookmark-page"
-                  oncommand="gContextMenu.bookmarkThisPage();"/>
+                  />
       </menugroup>
       <menuseparator id="context-sep-navigation"/>
       <menuitem id="context-viewsource-goToLine"
-                oncommand="gViewSourceUtils.getPageActor(gContextMenu.browser).promptAndGoToLine()"/>
+                />
       <menuitem id="context-viewsource-wrapLongLines"
                 type="checkbox"
-                oncommand="gViewSourceUtils.getPageActor(gContextMenu.browser).sendAsyncMessage('ViewSource:ToggleWrapping');"/>
+                />
       <menuitem id="context-viewsource-highlightSyntax"
                 type="checkbox"
-                oncommand="gViewSourceUtils.getPageActor(gContextMenu.browser).sendAsyncMessage('ViewSource:ToggleSyntaxHighlighting');"/>
+                />
       <menuseparator id="context-sep-viewsource-commands"/>
       <menuitem id="spell-no-suggestions"
                 disabled="true"
                 data-l10n-id="text-action-spell-no-suggestions"/>
       <menuitem id="spell-add-to-dictionary"
                 data-l10n-id="text-action-spell-add-to-dictionary"
-                oncommand="InlineSpellCheckerUI.addToDictionary();"/>
+                />
       <menuitem id="spell-undo-add-to-dictionary"
                 data-l10n-id="text-action-spell-undo-add-to-dictionary"
-                oncommand="InlineSpellCheckerUI.undoAddToDictionary();" />
+                 />
       <menuseparator id="spell-suggestions-separator"/>
       <menuitem id="context-openlinkincurrent"
                 class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link"
-                oncommand="gContextMenu.openLinkInCurrent();"/>
+                />
       <menuitem id="context-openlinkincontainertab"
                 class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link-in-container-tab"
                 data-l10n-args='{"containerName":""}'
-                oncommand="gContextMenu.openLinkInTab(event);"/>
+                />
       <menuitem id="context-openlinkintab"
                 class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link-new-tab"
                 data-usercontextid="0"
-                oncommand="gContextMenu.openLinkInTab(event);"/>
+                />
 
       <menu id="context-openlinkinusercontext-menu"
             class="context-menu-open-link"
@@ -1026,34 +942,34 @@ if (AppConstants.platform == "macosx") {
       <menuitem id="context-openlink"
                 class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link-new-window"
-                oncommand="gContextMenu.openLink();"/>
+                />
       <menuitem id="context-openlinkprivate"
                 class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link-new-private-window"
-                oncommand="gContextMenu.openLinkInPrivateWindow();"/>
+                />
       <menuseparator id="context-sep-open"/>
       <menuitem id="context-bookmarklink"
                 data-l10n-id="main-context-menu-bookmark-link-2"
-                oncommand="gContextMenu.bookmarkLink();"/>
+                />
       <menuitem id="context-savelink"
                 data-l10n-id="main-context-menu-save-link"
-                oncommand="gContextMenu.saveLink();"/>
+                />
       <menuitem id="context-savelinktopocket"
                 data-l10n-id="main-context-menu-save-link-to-pocket"
-                oncommand= "Pocket.savePage(gContextMenu.browser, gContextMenu.linkURL);"/>
+                />
       <menuitem id="context-copyemail"
                 data-l10n-id="main-context-menu-copy-email"
-                oncommand="gContextMenu.copyEmail();"/>
+                />
       <menuitem id="context-copyphone"
                 data-l10n-id="main-context-menu-copy-phone"
-                oncommand="gContextMenu.copyPhone();"/>
+                />
       <menuitem id="context-copylink"
                 data-l10n-id="main-context-menu-copy-link-simple"
-                oncommand="gContextMenu.copyLink();"/>
+                />
       <menuitem id="context-stripOnShareLink"
                 data-l10n-id="main-context-menu-strip-on-share-link"
                 hidden="true"
-                oncommand="gContextMenu.copyStrippedLink();"/>
+                />
       <menu id="context-sendlinktodevice"
             class="sync-ui-item"
             data-l10n-id="main-context-menu-link-send-to-device"
@@ -1066,131 +982,131 @@ if (AppConstants.platform == "macosx") {
       <menuseparator id="context-sep-copylink"/>
       <menuitem id="context-media-play"
                 data-l10n-id="main-context-menu-media-play"
-                oncommand="gContextMenu.mediaCommand('play');"/>
+                />
       <menuitem id="context-media-pause"
                 data-l10n-id="main-context-menu-media-pause"
-                oncommand="gContextMenu.mediaCommand('pause');"/>
+                />
       <menuitem id="context-media-mute"
                 data-l10n-id="main-context-menu-media-mute"
-                oncommand="gContextMenu.mediaCommand('mute');"/>
+                />
       <menuitem id="context-media-unmute"
                 data-l10n-id="main-context-menu-media-unmute"
-                oncommand="gContextMenu.mediaCommand('unmute');"/>
+                />
       <menu id="context-media-playbackrate" data-l10n-id="main-context-menu-media-play-speed-2">
         <menupopup>
           <menuitem id="context-media-playbackrate-050x"
                     data-l10n-id="main-context-menu-media-play-speed-slow-2"
                     type="radio"
                     name="playbackrate"
-                    oncommand="gContextMenu.mediaCommand('playbackRate', 0.5);"/>
+                    />
           <menuitem id="context-media-playbackrate-100x"
                     data-l10n-id="main-context-menu-media-play-speed-normal-2"
                     type="radio"
                     name="playbackrate"
                     checked="true"
-                    oncommand="gContextMenu.mediaCommand('playbackRate', 1.0);"/>
+                    />
           <menuitem id="context-media-playbackrate-125x"
                     data-l10n-id="main-context-menu-media-play-speed-fast-2"
                     type="radio"
                     name="playbackrate"
-                    oncommand="gContextMenu.mediaCommand('playbackRate', 1.25);"/>
+                    />
           <menuitem id="context-media-playbackrate-150x"
                     data-l10n-id="main-context-menu-media-play-speed-faster-2"
                     type="radio"
                     name="playbackrate"
-                    oncommand="gContextMenu.mediaCommand('playbackRate', 1.5);"/>
+                    />
           <menuitem id="context-media-playbackrate-200x"
                     data-l10n-id="main-context-menu-media-play-speed-fastest-2"
                     type="radio"
                     name="playbackrate"
-                    oncommand="gContextMenu.mediaCommand('playbackRate', 2.0);"/>
+                    />
         </menupopup>
       </menu>
       <menuitem id="context-media-loop"
                 data-l10n-id="main-context-menu-media-loop"
                 type="checkbox"
-                oncommand="gContextMenu.mediaCommand('loop');"/>
+                />
       <menuitem id="context-leave-dom-fullscreen"
                 data-l10n-id="main-context-menu-media-video-leave-fullscreen"
-                oncommand="gContextMenu.leaveDOMFullScreen();"/>
+                />
       <menuitem id="context-video-fullscreen"
                 data-l10n-id="main-context-menu-media-video-fullscreen"
-                oncommand="gContextMenu.mediaCommand('fullscreen');"/>
+                />
       <menuitem id="context-media-hidecontrols"
                 data-l10n-id="main-context-menu-media-hide-controls"
-                oncommand="gContextMenu.mediaCommand('hidecontrols');"/>
+                />
       <menuitem id="context-media-showcontrols"
                 data-l10n-id="main-context-menu-media-show-controls"
-                oncommand="gContextMenu.mediaCommand('showcontrols');"/>
+                />
       <menuseparator id="context-media-sep-video-commands"/>
       <menuitem id="context-viewvideo"
                 data-l10n-id="main-context-menu-video-view-new-tab"
-                oncommand="gContextMenu.viewMedia(event);"/>
+                />
       <menuitem id="context-video-pictureinpicture"
                 data-l10n-id="main-context-menu-media-watch-pip"
                 type="checkbox"
-                oncommand="gContextMenu.mediaCommand('pictureinpicture');"/>
+                />
       <menuseparator id="context-media-sep-commands"/>
       <menuitem id="context-reloadimage"
                 data-l10n-id="main-context-menu-image-reload"
-                oncommand="gContextMenu.reloadImage();"/>
+                />
       <menuitem id="context-viewimage"
                 data-l10n-id="main-context-menu-image-view-new-tab"
-                oncommand="gContextMenu.viewMedia(event);"/>
+                />
       <menuitem id="context-saveimage"
                 data-l10n-id="main-context-menu-image-save-as"
-                oncommand="gContextMenu.saveMedia();"/>
+                />
       <menuitem id="context-video-saveimage"
                 data-l10n-id="main-context-menu-video-take-snapshot"
-                oncommand="gContextMenu.saveVideoFrameAsImage();"/>
+                />
       <menuitem id="context-savevideo"
                 data-l10n-id="main-context-menu-video-save-as"
-                oncommand="gContextMenu.saveMedia();"/>
+                />
       <menuitem id="context-saveaudio"
                 data-l10n-id="main-context-menu-audio-save-as"
-                oncommand="gContextMenu.saveMedia();"/>
+                />
       <menuitem id="context-copyimage-contents"
                 data-l10n-id="main-context-menu-image-copy"
-                oncommand="goDoCommand('cmd_copyImage');"/>
+                />
       <menuitem id="context-copyimage"
                 data-l10n-id="main-context-menu-image-copy-link"
-                oncommand="gContextMenu.copyMediaLocation();"/>
+                />
       <menuitem id="context-copyvideourl"
                 data-l10n-id="main-context-menu-video-copy-link"
-                oncommand="gContextMenu.copyMediaLocation();"/>
+                />
       <menuitem id="context-copyaudiourl"
                 data-l10n-id="main-context-menu-audio-copy-link"
-                oncommand="gContextMenu.copyMediaLocation();"/>
+                />
       <menuitem id="context-sendimage"
                 data-l10n-id="main-context-menu-image-email"
-                oncommand="gContextMenu.sendMedia();"/>
+                />
       <menuitem id="context-sendvideo"
                 data-l10n-id="main-context-menu-video-email"
-                oncommand="gContextMenu.sendMedia();"/>
+                />
       <menuitem id="context-sendaudio"
                 data-l10n-id="main-context-menu-audio-email"
-                oncommand="gContextMenu.sendMedia();"/>
+                />
       <menuitem id="context-imagetext"
                 data-l10n-id="main-context-menu-image-copy-text"
-                oncommand="gContextMenu.getImageText()"/>
+                />
       <menuitem id="context-viewimageinfo"
                 hidden="true"
                 data-l10n-id="main-context-menu-image-info"
-                oncommand="gContextMenu.viewImageInfo();"/>
+                />
       <menuitem id="context-viewimagedesc"
                 data-l10n-id="main-context-menu-image-desc"
-                oncommand="gContextMenu.viewImageDesc(event);"/>
+                />
       <menuseparator id="context-sep-setbackground"/>
       <menuitem id="context-setDesktopBackground"
                 data-l10n-id="main-context-menu-image-set-image-as-background"
-                oncommand="gContextMenu.setDesktopBackground();"/>
+                />
       <menuseparator id="context-sep-sharing"/>
       <menuitem id="context-savepage"
                 data-l10n-id="main-context-menu-page-save"
-                oncommand="gContextMenu.savePageAs();"/>
+                />
       <menuitem id="context-pocket"
                 data-l10n-id="main-context-menu-save-to-pocket"
-                oncommand="Pocket.savePage(gContextMenu.browser, gContextMenu.browser.currentURI.spec, gContextMenu.browser.contentTitle);"/>
+                />
       <menu id="context-sendpagetodevice"
             class="sync-ui-item"
             data-l10n-id="main-context-menu-send-to-device"
@@ -1204,15 +1120,15 @@ if (AppConstants.platform == "macosx") {
       <menuitem id="fill-login-generated-password"
                 data-l10n-id="main-context-menu-suggest-strong-password"
                 hidden="true"
-                oncommand="gContextMenu.useGeneratedPassword();"/>
+                />
       <menuitem id="use-relay-mask"
                 data-l10n-id="main-context-menu-use-relay-mask"
                 hidden="true"
-                oncommand="gContextMenu.useRelayMask();"/>
+                />
       <menuitem id="manage-saved-logins"
                 data-l10n-id="main-context-menu-manage-passwords"
                 hidden="true"
-                oncommand="gContextMenu.openPasswordManager();"/>
+                />
       <menuseparator id="passwordmgr-items-separator"/>
       <menuitem id="context-undo"
                 data-l10n-id="text-action-undo"
@@ -1240,113 +1156,97 @@ if (AppConstants.platform == "macosx") {
                 data-l10n-id="text-action-select-all"
                 command="cmd_selectAll"/>
       <menuitem id="context-pdfjs-highlight-selection"
-                data-l10n-id="text-action-highlight-selection"
-                oncommand="gContextMenu.pdfJSCmd('highlightSelection');"/>
+                data-l10n-id="text-action-highlight-selection"/>
       <menuitem id="context-reveal-password"
                 type="checkbox"
-                data-l10n-id="main-context-menu-reveal-password"
-                oncommand="gContextMenu.toggleRevealPassword();"/>
+                data-l10n-id="main-context-menu-reveal-password"/>
       <menuitem id="context-print-selection"
-                data-l10n-id="main-context-menu-print-selection-2"
-                oncommand="gContextMenu.printSelection();"/>
+                data-l10n-id="main-context-menu-print-selection-2"/>
       <menuseparator id="context-sep-selectall"/>
 
       <menuitem id="context-pdfjs-undo"
-                data-l10n-id="text-action-undo"
-                oncommand="gContextMenu.pdfJSCmd('undo');"/>
+                data-l10n-id="text-action-undo"/>
       <menuitem id="context-pdfjs-redo"
-                data-l10n-id="text-action-redo"
-                oncommand="gContextMenu.pdfJSCmd('redo');"/>
+                data-l10n-id="text-action-redo"/>
       <menuseparator id="context-sep-pdfjs-redo"/>
       <menuitem id="context-pdfjs-cut"
-                data-l10n-id="text-action-cut"
-                oncommand="gContextMenu.pdfJSCmd('cut');"/>
+                data-l10n-id="text-action-cut"/>
       <menuitem id="context-pdfjs-copy"
-                data-l10n-id="text-action-copy"
-                oncommand="gContextMenu.pdfJSCmd('copy');"/>
+                data-l10n-id="text-action-copy"/>
       <menuitem id="context-pdfjs-paste"
-                data-l10n-id="text-action-paste"
-                oncommand="gContextMenu.pdfJSCmd('paste');"/>
+                data-l10n-id="text-action-paste"/>
       <menuitem id="context-pdfjs-delete"
-                data-l10n-id="text-action-delete"
-                oncommand="gContextMenu.pdfJSCmd('delete');"/>
+                data-l10n-id="text-action-delete"/>
       <menuitem id="context-pdfjs-selectall"
-                data-l10n-id="text-action-select-all"
-                oncommand="gContextMenu.pdfJSCmd('selectAll');"/>
+                data-l10n-id="text-action-select-all"/>
       <menuseparator id="context-sep-pdfjs-selectall"/>
 
       <menuitem id="context-take-screenshot"
-                data-l10n-id="main-context-menu-take-screenshot"
-                oncommand="gContextMenu.takeScreenshot();"/>
+                data-l10n-id="main-context-menu-take-screenshot"/>
       <menuseparator id="context-sep-screenshots"/>
       <menuitem id="context-keywordfield"
-                data-l10n-id="main-context-menu-keyword"
-                oncommand="AddKeywordForSearchField();"/>
-      <menuitem id="context-searchselect"
-                oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, this.usePrivate, this.principal, this.csp, event);"/>
-      <menuitem id="context-searchselect-private"
-                oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, true, this.principal, this.csp, event);"/>
+                data-l10n-id="main-context-menu-keyword"/>
+      <menuitem id="context-searchselect"/>
+      <menuitem id="context-searchselect-private"/>
       <menuitem id="context-translate-selection"
-                data-l10n-id="main-context-menu-translate-selection"
-                oncommand="gContextMenu.openSelectTranslationsPanel(event);"/>
-      <menu id="context-ask-chat"
-            oncommand="nsContextMenu.GenAI.handleAskChat(event)"/>
+                data-l10n-id="main-context-menu-translate-selection"/>
+      <menu id="context-ask-chat"/>
 
       <menuseparator id="frame-sep"/>
       <menu id="frame" data-l10n-id="main-context-menu-frame">
         <menupopup>
           <menuitem id="context-showonlythisframe"
                     data-l10n-id="main-context-menu-frame-show-this"
-                    oncommand="gContextMenu.showOnlyThisFrame();"/>
+                    />
           <menuitem id="context-openframeintab"
                     data-l10n-id="main-context-menu-frame-open-tab"
-                    oncommand="gContextMenu.openFrameInTab();"/>
+                    />
           <menuitem id="context-openframe"
                     data-l10n-id="main-context-menu-frame-open-window"
-                    oncommand="gContextMenu.openFrame();"/>
+                    />
           <menuseparator id="open-frame-sep"/>
           <menuitem id="context-reloadframe"
                     data-l10n-id="main-context-menu-frame-reload"
-                    oncommand="gContextMenu.reloadFrame(event);"/>
+                    />
           <menuseparator/>
           <menuitem id="context-bookmarkframe"
                     data-l10n-id="main-context-menu-frame-add-bookmark"
-                    oncommand="gContextMenu.addBookmarkForFrame();"/>
+                    />
           <menuitem id="context-saveframe"
                     data-l10n-id="main-context-menu-frame-save-as"
-                    oncommand="gContextMenu.saveFrame();"/>
+                    />
           <menuseparator/>
           <menuitem id="context-printframe"
                     data-l10n-id="main-context-menu-frame-print"
-                    oncommand="gContextMenu.printFrame();"/>
+                    />
           <menuseparator/>
           <menuitem id="context-take-frame-screenshot"
                     data-l10n-id="main-context-menu-take-frame-screenshot"
-                    oncommand="gContextMenu.takeScreenshot();"/>
+                    />
           <menuseparator id="context-sep-frame-screenshot"/>
           <menuitem id="context-viewframesource"
                     data-l10n-id="main-context-menu-frame-view-source"
-                    oncommand="gContextMenu.viewFrameSource();"/>
+                    />
           <menuitem id="context-viewframeinfo"
                     data-l10n-id="main-context-menu-frame-view-info"
-                    oncommand="gContextMenu.viewFrameInfo();"/>
+                    />
         </menupopup>
       </menu>
       <menuseparator id="spell-separator"/>
       <menuitem id="spell-check-enabled"
                 data-l10n-id="text-action-spell-check-toggle"
                 type="checkbox"
-                oncommand="InlineSpellCheckerUI.toggleEnabled(window);"/>
+                />
       <menuitem id="spell-add-dictionaries-main"
                 data-l10n-id="text-action-spell-add-dictionaries"
-                oncommand="gContextMenu.addDictionaries();"/>
+                />
       <menu id="spell-dictionaries"
             data-l10n-id="text-action-spell-dictionaries">
           <menupopup id="spell-dictionaries-menu">
               <menuseparator id="spell-language-separator"/>
               <menuitem id="spell-add-dictionaries"
                         data-l10n-id="text-action-spell-add-dictionaries"
-                        oncommand="gContextMenu.addDictionaries();"/>
+                        />
           </menupopup>
       </menu>
       <menuseparator hidden="true" id="context-sep-bidi"/>
@@ -1355,38 +1255,35 @@ if (AppConstants.platform == "macosx") {
                 command="cmd_switchTextDirection"/>
       <menuitem hidden="true" id="context-bidi-page-direction-toggle"
                 data-l10n-id="main-context-menu-bidi-switch-page"
-                oncommand="gContextMenu.switchPageDirection();"/>
+                />
       <menuseparator id="inspect-separator" hidden="true"/>
       <menuitem id="context-viewpartialsource-selection"
                 data-l10n-id="main-context-menu-view-selection-source"
-                oncommand="gContextMenu.viewPartialSource();"/>
+                />
       <menuitem id="context-viewsource"
                 data-l10n-id="main-context-menu-view-page-source"
-                oncommand="BrowserCommands.viewSource(gContextMenu.browser);"/>
+                />
       <menuitem id="context-inspect-a11y"
                 hidden="true"
                 data-l10n-id="main-context-menu-inspect-a11y-properties"
-                oncommand="gContextMenu.inspectA11Y();"/>
+                />
       <menuitem id="context-inspect"
                 hidden="true"
                 data-l10n-id="main-context-menu-inspect"
-                oncommand="gContextMenu.inspectNode();"/>
+                />
       <menuseparator id="context-media-eme-separator" hidden="true"/>
       <menuitem id="context-media-eme-learnmore"
                 class="menuitem-iconic"
                 hidden="true"
                 data-l10n-id="main-context-menu-eme-learn-more"
-                oncommand="gContextMenu.drmLearnMore(event);"/>
+                />
   </menupopup>
 
   <menupopup id="pictureInPictureToggleContextMenu">
-    <menuitem
-              id="context_HidePictureInPictureToggle"
-              data-l10n-id="picture-in-picture-hide-toggle"
-              oncommand="PictureInPicture.hideToggle();" />
+    <menuitem id="context_HidePictureInPictureToggle"
+              data-l10n-id="picture-in-picture-hide-toggle"/>
     <menuitem id="context_MovePictureInPictureToggle"
-              data-l10n-id="picture-in-picture-move-toggle-left"
-              oncommand="PictureInPicture.moveToggle();" />
+              data-l10n-id="picture-in-picture-move-toggle-left"/>
   </menupopup>
 
 
@@ -1576,7 +1473,6 @@ if (AppConstants.platform == "macosx") {
          orient="vertical"
          noautofocus="true"
          norolluponanchor="true"
-         rolluponmousewheel="true"
          consumeoutsideclicks="false">
     <html:div class="tab-preview-text-container">
       <html:div class="tab-preview-title"></html:div>
@@ -1629,13 +1525,12 @@ if (AppConstants.platform == "macosx") {
     </panel>
   </html:template>
 
-  <menupopup id="pageActionContextMenu"
-             onpopupshowing="BrowserPageActions.onContextMenuShowing(event, this);">
-    <menuitem class="pageActionContextMenuItem extensionPinned extensionUnpinned manageExtensionItem"
-              oncommand="BrowserPageActions.openAboutAddonsForContextAction();"
+  <menupopup id="pageActionContextMenu">
+    <menuitem id="pageActionContextMenuManageExtension"
+              class="pageActionContextMenuItem extensionPinned extensionUnpinned manageExtensionItem"
               data-l10n-id="page-action-manage-extension2"/>
-    <menuitem class="pageActionContextMenuItem extensionPinned extensionUnpinned removeExtensionItem"
-              oncommand="BrowserPageActions.removeExtensionForContextAction();"
+    <menuitem id="pageActionContextMenuRemoveExtension"
+              class="pageActionContextMenuItem extensionPinned extensionUnpinned removeExtensionItem"
               data-l10n-id="page-action-remove-extension2"/>
   </menupopup>
 
@@ -1652,9 +1547,7 @@ if (AppConstants.platform == "macosx") {
 </tooltip>
 
   <tooltip id="tabbrowser-tab-tooltip"
-           class="places-tooltip"
-           onpopupshowing="gBrowser.createTooltip(event);"
-           onpopuphiding="this.removeAttribute('position')">
+           class="places-tooltip">
     <box class="places-tooltip-box">
       <description class="tooltip-label places-tooltip-title"/>
       <hbox>
@@ -3084,17 +2977,19 @@ if (AppConstants.platform == "macosx") {
          tabspecific="true"
          locationspecific="true"
          orient="vertical">
-    <html:div id="select-translations-panel-a11y-document-wrapper"
-              role="document"
-              aria-labelledby="select-translations-panel-header"
-              aria-describedby="select-translations-panel-a11y-document-wrapper">
+    <html:div role="document"
+              aria-labelledby="select-translations-panel-header select-translations-panel-beta-icon-wrapper"
+              aria-describedby="select-translations-panel-settings-button">
       <hbox id="select-translations-panel-header-row"
             class="panel-header select-translations-panel-content">
         <html:h1 class="translations-panel-header-wrapper">
           <html:span id="select-translations-panel-header" data-l10n-id="select-translations-panel-header">
           </html:span>
         </html:h1>
-        <hbox class="translations-panel-beta" role="image" aria-label="Beta">
+        <hbox id="select-translations-panel-beta-icon-wrapper"
+              class="translations-panel-beta"
+              role="image"
+              aria-label="Beta">
           <image id="select-translations-panel-beta-icon"
                  class="translations-panel-beta-icon">
           </image>
@@ -3189,7 +3084,8 @@ if (AppConstants.platform == "macosx") {
         <vbox class="select-translations-panel-content">
           <html:textarea id="select-translations-panel-text-area"
                          readonly="true"
-                         tabindex="0">
+                         tabindex="0"
+                         aria-labelledby="select-translations-panel-main-content">
           </html:textarea>
           <html:moz-message-bar id="select-translations-panel-translation-failure-message-bar"
                                 type="error"
@@ -3405,7 +3301,7 @@ if (AppConstants.platform == "macosx") {
                      data-l10n-id="all-tabs-menu-search-tabs"/>
       <toolbarbutton id="allTabsMenu-closeDuplicateTabs"
                      class="subviewbutton"
-                     data-l10n-id="all-tabs-menu-close-duplicate-tabs"/>
+                     data-l10n-id="all-tabs-menu-close-all-duplicate-tabs"/>
       <toolbarbutton id="allTabsMenu-containerTabsButton"
                      class="subviewbutton subviewbutton-nav"
                      closemenu="none"
@@ -3437,8 +3333,7 @@ if (AppConstants.platform == "macosx") {
   </panelview>
 </html:template>
 
-  <tooltip id="dynamic-shortcut-tooltip"
-           onpopupshowing="UpdateDynamicShortcutTooltipText(this);"/>
+  <tooltip id="dynamic-shortcut-tooltip"/>
 
   <menupopup id="SyncedTabsSidebarContext">
     <menuitem data-lazy-l10n-id="synced-tabs-context-open"
@@ -3448,8 +3343,7 @@ if (AppConstants.platform == "macosx") {
     <menu data-lazy-l10n-id="synced-tabs-context-open-in-container-tab"
           id="syncedTabsOpenSelectedInContainerTab"
           hidden="true">
-      <menupopup id="SyncedTabsOpenSelectedInContainerTabMenu"
-                 onpopupshowing="createUserContextMenu(event, { isContextMenu: true });"/>
+      <menupopup id="SyncedTabsOpenSelectedInContainerTabMenu"/>
     </menu>
     <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-window"
               id="syncedTabsOpenSelectedInWindow" where="window"/>
@@ -3464,8 +3358,7 @@ if (AppConstants.platform == "macosx") {
     <menuitem data-lazy-l10n-id="synced-tabs-context-open-all-in-tabs"
               id="syncedTabsOpenAllInTabs"/>
     <menuitem data-lazy-l10n-id="synced-tabs-context-manage-devices"
-              id="syncedTabsManageDevices"
-              oncommand="gSync.openDevicesManagementPage('syncedtabs-sidebar');"/>
+              id="syncedTabsManageDevices"/>
     <menuitem data-lazy-l10n-id="synced-tabs-context-sync-now"
               id="syncedTabsRefresh"/>
   </menupopup>
@@ -3516,8 +3409,7 @@ if (AppConstants.platform == "macosx") {
            orient="vertical"
            ignorekeys="true"
            consumeoutsideclicks="never"
-           norolluponanchor="true"
-           onpopupshown="gSharedTabWarning.sharedTabWarningShown();">
+           norolluponanchor="true">
       <hbox type="window" align="start">
         <image class="screen-icon popup-notification-icon"></image>
         <vbox flex="1" pack="start">
@@ -3589,75 +3481,69 @@ if (AppConstants.platform == "macosx") {
   </panel>
 </html:template>
 
-  <menupopup id="unified-extensions-context-menu"
-             onpopupshowing="gUnifiedExtensions.updateContextMenu(this, event)"
-             oncommand="gUnifiedExtensions.onContextMenuCommand(this, event)">
-    <menuitem oncommand="gUnifiedExtensions.onPinToToolbarChange(this.parentElement, event);"
+  <menupopup id="unified-extensions-context-menu">
+    <menuitem id="unified-extensions-context-menu-pin-to-toolbar"
               data-lazy-l10n-id="unified-extensions-context-menu-pin-to-toolbar"
               type="checkbox"
               class="unified-extensions-context-menu-pin-to-toolbar"/>
-    <menuitem oncommand="gUnifiedExtensions.moveWidget(this.parentElement, 'up');"
+    <menuitem id="unified-extensions-context-menu-move-widget-up"
               data-lazy-l10n-id="unified-extensions-context-menu-move-widget-up"
               class="unified-extensions-context-menu-move-widget-up"/>
-    <menuitem oncommand="gUnifiedExtensions.moveWidget(this.parentElement, 'down');"
+    <menuitem id="unified-extensions-context-menu-move-widget-down"
               data-lazy-l10n-id="unified-extensions-context-menu-move-widget-down"
               class="unified-extensions-context-menu-move-widget-down"/>
     <menuseparator class="unified-extensions-context-menu-management-separator"/>
     <menuitem data-lazy-l10n-id="unified-extensions-context-menu-manage-extension"
               class="unified-extensions-context-menu-manage-extension"
-              oncommand="gUnifiedExtensions.manageExtension(this.parentElement)" />
+              id="unified-extensions-context-menu-manage-extension"/>
     <menuitem data-lazy-l10n-id="unified-extensions-context-menu-remove-extension"
               class="unified-extensions-context-menu-remove-extension"
-              oncommand="gUnifiedExtensions.removeExtension(this.parentElement)" />
+              id="unified-extensions-context-menu-remove-extension"/>
     <menuitem data-lazy-l10n-id="unified-extensions-context-menu-report-extension"
               class="unified-extensions-context-menu-report-extension"
-              oncommand="gUnifiedExtensions.reportExtension(this.parentElement)" />
+              id="unified-extensions-context-menu-report-extension"/>
   </menupopup>
 
-  <menupopup id="full-page-translations-panel-settings-menupopup"
-             onpopupshown="FullPageTranslationsPanel.handleSettingsPopupShownEvent()"
-             onpopuphidden="FullPageTranslationsPanel.handleSettingsPopupHiddenEvent()">
+  <menupopup id="full-page-translations-panel-settings-menupopup">
     <menuitem class="always-offer-translations-menuitem"
               data-l10n-id="translations-panel-settings-always-offer-translation"
               type="checkbox"
               checked="false"
               autocheck="false"
-              oncommand="FullPageTranslationsPanel.onAlwaysOfferTranslations()"/>
+              id="translations-panel-settings-always-offer-translation"/>
     <menuitem class="always-translate-language-menuitem"
               data-l10n-id="translations-panel-settings-always-translate-unknown-language"
               type="checkbox"
               checked="false"
               autocheck="false"
-              oncommand="FullPageTranslationsPanel.onAlwaysTranslateLanguage()"/>
+              id="translations-panel-settings-always-translate"/>
     <menuitem class="never-translate-language-menuitem"
               data-l10n-id="translations-panel-settings-never-translate-unknown-language"
               type="checkbox"
               checked="false"
               autocheck="false"
-              oncommand="FullPageTranslationsPanel.onNeverTranslateLanguage()"/>
+              id="translations-panel-settings-never-translate"/>
     <menuseparator/>
     <menuitem class="never-translate-site-menuitem"
               data-l10n-id="translations-panel-settings-never-translate-site"
               type="checkbox"
               checked="false"
               autocheck="false"
-              oncommand="FullPageTranslationsPanel.onNeverTranslateSite()"/>
+              id="translations-panel-settings-never-translate-site"/>
     <menuseparator/>
     <menuitem class="manage-languages-menuitem"
               data-l10n-id="translations-panel-settings-manage-languages"
-              oncommand="FullPageTranslationsPanel.openManageLanguages()"/>
+              id="translations-panel-manage-languages"/>
     <menuitem data-l10n-id="translations-panel-settings-about2"
-              oncommand="FullPageTranslationsPanel.onAboutTranslations()"/>
+              id="translations-panel-about"/>
   </menupopup>
 
   <menupopup id="select-translations-panel-settings-menupopup">
     <menuitem id="select-translations-panel-open-settings-page-menuitem"
               class="manage-languages-menuitem"
-              data-l10n-id="select-translations-panel-open-translations-settings-menuitem"
-              oncommand="SelectTranslationsPanel.openTranslationsSettingsPage()"/>
+              data-l10n-id="select-translations-panel-open-translations-settings-menuitem"/>
     <menuitem id="select-translations-panel-about-translations-menuitem"
-              data-l10n-id="translations-panel-settings-about2"
-              oncommand="SelectTranslationsPanel.onAboutTranslations()"/>
+              data-l10n-id="translations-panel-settings-about2"/>
   </menupopup>
 </popupset>
 
@@ -4609,20 +4495,16 @@ if (AppConstants.platform == "macosx") {
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
 
-       <menubar id="main-menubar"
-                onpopupshowing="if (event.target.parentNode.parentNode == this)
-                                  this.setAttribute('openedwithkey',
-                                                    event.target.parentNode.openedWithKey);"
-                >
+       <menubar id="main-menubar">
+          <script src="chrome://browser/content/browser-menubar.js" />
             <menu id="file-menu" data-l10n-id="menu-file">
-              <menupopup id="menu_FilePopup"
-                         onpopupshowing="gFileMenu.onPopupShowing(event);">
+              <menupopup id="menu_FilePopup">
                 <menuitem id="menu_newNavigatorTab"
                           command="cmd_newNavigatorTab"
                           key="key_newNavigatorTab" data-l10n-id="menu-file-new-tab"/>
                 <menu id="menu_newUserContext"
                       hidden="true" data-l10n-id="menu-file-new-container-tab">
-                  <menupopup onpopupshowing="return createUserContextMenu(event);" />
+                  <menupopup id="menu_newUserContextPopup" />
                 </menu>
                 <menuitem id="menu_newNavigator"
                           key="key_newNavigator"
@@ -4673,9 +4555,7 @@ if (AppConstants.platform == "macosx") {
             </menu>
 
             <menu id="edit-menu" data-l10n-id="menu-edit">
-              <menupopup id="menu_EditPopup"
-                         onpopupshowing="updateEditUIVisibility()"
-                         onpopuphidden="updateEditUIVisibility()">
+              <menupopup id="menu_EditPopup">
                 <menuitem id="menu_undo"
                           key="key_undo"
                           command="cmd_undo" data-l10n-id="text-action-undo"/>
@@ -4718,7 +4598,7 @@ if (AppConstants.platform == "macosx") {
             <menu id="view-menu" data-l10n-id="menu-view">
               <menupopup id="menu_viewPopup">
                 <menu id="viewToolbarsMenu" data-l10n-id="menu-view-toolbars-menu">
-                  <menupopup id="view-menu-popup" onpopupshowing="onViewToolbarsPopupShowing(event);">
+                  <menupopup id="view-menu-popup">
                     <menuseparator/>
                     <menuitem id="menu_customizeToolbars"
                               command="cmd_CustomizeToolbars" data-l10n-id="menu-view-customize-toolbar2"/>
@@ -4748,12 +4628,10 @@ if (AppConstants.platform == "macosx") {
                   </menupopup>
                 </menu>
                 <menu id="pageStyleMenu" data-l10n-id="menu-view-page-style-menu">
-                  <menupopup onpopupshowing="gPageStyleMenu.fillPopup(this);">
+                  <menupopup id="pageStyleMenuPopup">
                     <menuitem id="menu_pageStyleNoStyle"
-                              oncommand="gPageStyleMenu.disableStyle();"
                               type="radio" data-l10n-id="menu-view-page-style-no-style"/>
                     <menuitem id="menu_pageStylePersistentOnly"
-                              oncommand="gPageStyleMenu.switchStyleSheet(null);"
                               type="radio"
                               checked="true" data-l10n-id="menu-view-page-basic-style"/>
                     <menuseparator/>
@@ -4761,7 +4639,6 @@ if (AppConstants.platform == "macosx") {
                 </menu>
                 <menuitem id="repair-text-encoding"
                           disabled="true"
-                          oncommand="BrowserCommands.forceEncodingDetection();"
                           data-l10n-id="menu-view-repair-text-encoding"/>
                 <menuseparator/>
                 <menuitem id="fullScreenItem"
@@ -4780,7 +4657,7 @@ if (AppConstants.platform == "macosx") {
                 <menuseparator hidden="true" id="documentDirection-separator"/>
                 <menuitem id="documentDirection-swap"
                           hidden="true"
-                          oncommand="gBrowser.selectedBrowser.sendMessageToActor('SwitchDocumentDirection', {}, 'SwitchDocumentDirection', 'roots');" data-l10n-id="menu-view-bidi-switch-page-direction"/>
+                          data-l10n-id="menu-view-bidi-switch-page-direction"/>
               </menupopup>
             </menu>
 
@@ -4788,9 +4665,6 @@ if (AppConstants.platform == "macosx") {
               <menupopup id="historyMenuPopup"
                          placespopup="true"
                          is="places-popup"
-                         oncommand="this.parentNode._placesView._onCommand(event);"
-                         onpopupshowing="if (!this.parentNode._placesView)
-                                           new HistoryMenu(event);"
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
                 <menuitem id="menu_showAllHistory"
@@ -4801,12 +4675,10 @@ if (AppConstants.platform == "macosx") {
                           command="Tools:Sanitize" data-l10n-id="menu-history-clear-recent-history"/>
                 <menuseparator id="sanitizeSeparator"/>
                 <menuitem id="sync-tabs-menuitem"
-                          oncommand="gSync.openSyncedTabsPanel();"
                           hidden="true" data-l10n-id="menu-history-synced-tabs"/>
                 <menuitem id="historyRestoreLastSession"
                           command="Browser:RestoreLastSession" data-l10n-id="menu-history-restore-last-session"/>
                 <menuitem id="hiddenTabsMenu"
-                          oncommand="gTabsPanel.showHiddenTabsPanel(event, 'hidden-tabs-menuitem');"
                           hidden="true" data-l10n-id="menu-history-hidden-tabs"/>
                 <menuitem id="menu_searchHistory"
                           command="History:SearchHistory"
@@ -4816,14 +4688,14 @@ if (AppConstants.platform == "macosx") {
                   <menupopup id="historyUndoPopup"
                              placespopup="true"
                              is="places-popup"
-                             onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoSubmenu();"/>
+                  />
                 </menu>
                 <menu id="historyUndoWindowMenu"
                       disabled="true" data-l10n-id="menu-history-undo-window-menu">
                   <menupopup id="historyUndoWindowPopup"
                              placespopup="true"
                              is="places-popup"
-                             onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoWindowSubmenu();">
+                  >
                   </menupopup>
                 </menu>
                 <menuseparator id="startHistorySeparator"
@@ -4844,9 +4716,6 @@ if (AppConstants.platform == "macosx") {
                onmouseup="BookmarksEventHandler.onMouseUp(event);"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
-               onpopupshowing="BookmarkingUI.onMainMenuPopupShowing(event);
-                               if (!this.parentNode._placesView)
-                                 new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`);"
                tooltip="bhTooltip" popupsinherittooltip="true">
       <menuitem id="bookmarksShowAll"
                 command="Browser:ShowAllBookmarks"
@@ -4873,9 +4742,7 @@ if (AppConstants.platform == "macosx") {
         <menupopup id="bookmarksToolbarFolderPopup"
                    placespopup="true"
                    is="places-popup"
-                   context="placesContext"
-                   onpopupshowing="if (!this.parentNode._placesView)
-                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);"/>
+                   context="placesContext"/>
       </menu>
       <menu id="menu_unsortedBookmarks"
             class="menu-iconic bookmark-item"
@@ -4884,9 +4751,7 @@ if (AppConstants.platform == "macosx") {
         <menupopup id="otherBookmarksFolderPopup"
                    placespopup="true"
                    is="places-popup"
-                   context="placesContext"
-                   onpopupshowing="if (!this.parentNode._placesView)
-                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`);"/>
+                   context="placesContext"/>
       </menu>
       <menu id="menu_mobileBookmarks"
             class="menu-iconic bookmark-item"
@@ -4896,9 +4761,7 @@ if (AppConstants.platform == "macosx") {
         <menupopup id="mobileBookmarksFolderPopup"
                    placespopup="true"
                    is="places-popup"
-                   context="placesContext"
-                   onpopupshowing="if (!this.parentNode._placesView)
-                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`);"/>
+                   context="placesContext"/>
       </menu>
       <menuseparator id="bookmarksMenuItemsSeparator"/>
       <!-- Bookmarks menu items -->
@@ -4918,26 +4781,26 @@ if (AppConstants.platform == "macosx") {
               <menuitem id="sync-setup"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-fxa-sign-in2"/>
+                        data-l10n-id="menu-tools-fxa-sign-in2"/>
               <menuitem id="sync-enable"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-turn-on-sync2"/>
+                        data-l10n-id="menu-tools-turn-on-sync2"/>
               <menuitem id="sync-unverifieditem"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-fxa-sign-in2"/>
+                        data-l10n-id="menu-tools-fxa-sign-in2"/>
               <menuitem id="sync-syncnowitem"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.doSync(event);" data-l10n-id="menu-tools-sync-now"/>
+                        data-l10n-id="menu-tools-sync-now"/>
               <menuitem id="sync-reauthitem"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openSignInAgainPage('menubar');" data-l10n-id="menu-tools-fxa-re-auth"/>
+                        data-l10n-id="menu-tools-fxa-re-auth"/>
 
               <menuitem id="menu_openFirefoxView"
-                        oncommand="FirefoxViewHandler.openTab();" data-l10n-id="menu-tools-firefox-view"/>
+                        data-l10n-id="menu-tools-firefox-view"/>
               <menuseparator id="devToolsSeparator"/>
               <menu id="browserToolsMenu" data-l10n-id="menu-tools-browser-tools">
                 <menupopup id="menuWebDeveloperPopup">
@@ -4955,16 +4818,14 @@ if (AppConstants.platform == "macosx") {
                         command="View:PageInfo" data-l10n-id="menu-tools-page-info"/>
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
-                        data-l10n-id="menu-settings"
-                        oncommand="openPreferences(undefined);"/>
+                        data-l10n-id="menu-settings"/>
               </menupopup>
             </menu>
             <menu id="helpMenu" data-l10n-id="menu-help">
-              <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
+              <menupopup id="menu_HelpPopup">
 <!-- Note: Items under here are cloned to the AppMenu Help submenu. The cloned items
      have their strings defined by appmenu-data-l10n-id. -->
                 <menuitem id="menu_openHelp"
-                          oncommand="openHelpLink('firefox-help')"
                           data-l10n-id="menu-get-help"
                           appmenu-data-l10n-id="appmenu-get-help"
                           />
@@ -4974,48 +4835,39 @@ if (AppConstants.platform == "macosx") {
                           hidden="true"
                           appmenu-data-l10n-id="menu-report-broken-site"/>
                 <menuitem id="feedbackPage"
-                          oncommand="openFeedbackPage()"
                           data-l10n-id="menu-help-share-ideas"
                           appmenu-data-l10n-id="appmenu-help-share-ideas"/>
                 <menuitem id="helpSafeMode"
-                          oncommand="safeModeRestart();"
                           data-l10n-id="menu-help-enter-troubleshoot-mode2"
                           appmenu-data-l10n-id="appmenu-help-enter-troubleshoot-mode2"/>
                 <menuitem id="troubleShooting"
-                          oncommand="openTroubleshootingPage()"
                           data-l10n-id="menu-help-more-troubleshooting-info"
                           appmenu-data-l10n-id="appmenu-help-more-troubleshooting-info"/>
                 <menuitem id="help_reportSiteIssue"
-                          oncommand="ReportSiteIssue();"
                           data-l10n-id="menu-help-report-site-issue"
                           appmenu-data-l10n-id="appmenu-help-report-site-issue"
                           hidden="true"/>
                 <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
                           disabled="true"
-                          oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
                           hidden="true"
                           data-l10n-id="menu-help-report-deceptive-site"
                           appmenu-data-l10n-id="appmenu-help-report-deceptive-site"/>
                 <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
                           disabled="true"
-                          oncommand="ReportFalseDeceptiveSite();"
                           data-l10n-id="menu-help-not-deceptive"
                           appmenu-data-l10n-id="appmenu-help-not-deceptive"
                           hidden="true"/>
                 <menuitem id="helpSwitchDevice"
-                          oncommand="openSwitchingDevicesPage();"
                           data-l10n-id="menu-help-switch-device"
                           appmenu-data-l10n-id="appmenu-help-switch-device"/>
                 <menuseparator id="aboutSeparator"/>
                 <menuitem id="aboutName"
-                          oncommand="openAboutDialog();"
                           data-l10n-id="menu-about"
                           appmenu-data-l10n-id="appmenu-about"/>
                 <menuseparator id="helpPolicySeparator"
                           hidden="true"/>
                 <menuitem id="helpPolicySupport"
-                          hidden="true"
-                          oncommand="openTrustedLinkIn(Services.policies.getSupportMenu().URL.href, 'tab');"/>
+                          hidden="true"/>
               </menupopup>
           </menu>
         </menubar>
@@ -5063,12 +4915,7 @@ if (AppConstants.platform == "macosx") {
                         class="toolbarbutton-1"
                         badged="true"
                         data-l10n-id="appmenu-menu-button-closed2"/>
-          <!-- <toolbarbutton id="PanelUI-menu-button"
-                        class="toolbarbutton-1"
-                        delegatesanchor="true"
-                        badged="true"
-                        consumeanchor="PanelUI-button"
-                        data-l10n-id="appmenu-menu-button-closed2"/> -->
+          
           <!-- <toolbarbutton id="firefox-view-button"
                          class="toolbarbutton-1 chromeclass-toolbar-additional"
                          data-l10n-id="toolbar-button-firefox-view-2"
@@ -5161,7 +5008,7 @@ if (AppConstants.platform == "macosx") {
   </vbox>
 
   <toolbar id="nav-bar"
-           class="browser-toolbar"
+           class="browser-toolbar chromeclass-location"
            data-l10n-id="navbar-accessible"
            fullscreentoolbar="true" mode="icons" customizable="true"
            customizationtarget="nav-bar-customization-target"
@@ -5216,7 +5063,7 @@ if (AppConstants.platform == "macosx") {
       <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
       <toolbaritem id="urlbar-container"
                    removable="false"
-                   class="chromeclass-location" overflows="false">
+                   overflows="false">
         <toolbartabstop/>
         <hbox id="urlbar" flex="1"
               context=""
@@ -5231,7 +5078,8 @@ if (AppConstants.platform == "macosx") {
                  collapsed="true">
                 <image id="remote-control-icon"/>
             </box>
-            <box class="chromeclass-toolbar-additional urlbar-search-button"/>
+            <box id="urlbar-search-button"
+                 class="chromeclass-toolbar-additional"/>
             <!-- Use onclick instead of normal popup= syntax since the popup
                  code fires onmousedown, and hence eats our favicon drag events. -->
             <box id="tracking-protection-icon-container" align="center"
@@ -5351,6 +5199,17 @@ if (AppConstants.platform == "macosx") {
                        data-l10n-id="urlbar-storage-access-anchor"/>
               </box>
             </box>
+            <toolbarbutton id="urlbar-searchmode-switcher"
+                           data-l10n-id="urlbar-searchmode-button"
+                           onmousedown="SearchModeSwitcher.openPanel(this, event)" onkeypress="SearchModeSwitcher.openPanel(this, event)"
+                           align="center" noautofocus="true" tooltip="dynamic-shortcut-tooltip" class="chromeclass-toolbar-additional">
+              <image id="searchmode-switcher-icon" />
+              <label id="searchmode-switcher-title" />
+              <image id="searchmode-switcher-dropmarker" data-l10n-id="urlbar-searchmode-dropmarker"
+                     class="toolbarbutton-icon toolbarbutton-combined-buttons-dropmarker" />
+              <toolbarbutton id="searchmode-switcher-close" noautofocus="true" class="toolbarbutton-icon close-button"
+                             onmousedown="SearchModeSwitcher.exitSearchMode(this, event)" />
+            </toolbarbutton>
             <box id="urlbar-label-box" align="center">
               <label id="urlbar-label-switchtab" class="urlbar-label" data-l10n-id="urlbar-switch-to-tab"/>
               <label id="urlbar-label-extension" class="urlbar-label" data-l10n-id="urlbar-extension"/>
@@ -5765,7 +5624,10 @@ if (AppConstants.platform == "macosx") {
 
 <hbox flex="1" id="browser">
   <box context="sidebar-context-menu" id="sidebar-main" hidden="true">
-    <html:sidebar-main flex="1"></html:sidebar-main>
+    <html:sidebar-main flex="1">
+    <html:div id="vertical-tabs" slot="tabstrip">
+    </html:div>
+  </html:sidebar-main>
   </box>
   <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
     <box id="sidebar-header" align="center">
@@ -5776,7 +5638,7 @@ if (AppConstants.platform == "macosx") {
       </toolbarbutton>
       <image id="sidebar-throbber"/>
       <spacer id="sidebar-spacer"/>
-      <toolbarbutton id="sidebar-close" class="close-icon tabbable" data-l10n-id="sidebar-close-button" oncommand="SidebarController.hide();"/>
+      <toolbarbutton id="sidebar-close" class="close-icon tabbable" data-l10n-id="sidebar-close-button"/>
     </box>
     <browser id="sidebar" autoscroll="false" disablehistory="true" disablefullscreen="true" tooltip="aHTMLTooltip"/>
   </vbox>
@@ -5800,7 +5662,7 @@ if (AppConstants.platform == "macosx") {
 <box id="customization-content-container">
 <box id="customization-palette-container">
   <label id="customization-header" data-l10n-id="customize-mode-menu-and-toolbars-header"></label>
-  <vbox id="customization-palette" class="customization-palette" hidden="true"/>
+  <vbox id="customization-palette" hidden="true"/>
   <html:div id="customization-pong-arena" hidden="true"/>
   <spacer id="customization-spacer"/>
 </box>
@@ -5823,7 +5685,7 @@ if (AppConstants.platform == "macosx") {
 <checkbox id="customization-titlebar-visibility-checkbox" class="customization-checkbox"
           oncommand="gCustomizeMode.toggleTitlebar(this.checked)" data-l10n-id="customize-mode-titlebar"/>
 <button id="customization-toolbar-visibility-button" class="footer-button" type="menu" data-l10n-id="customize-mode-toolbars">
-  <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
+  <menupopup id="customization-toolbar-menu" onpopupshowing="if (event.target == this) onViewToolbarsPopupShowing(event)"/>
 </button>
 <button id="customization-uidensity-button"
         data-l10n-id="customize-mode-uidensity"
