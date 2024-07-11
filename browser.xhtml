@@ -404,6 +404,10 @@ if (AppConstants.platform == "macosx") {
     <key id="key_wrToggleCaptureSequenceCmd"
     key="^" modifiers="control"
     command="wrToggleCaptureSequenceCmd"/>
+
+    <!-- Custom Keyset -->
+    <key id="key_copyOpenTabLink" command="cmd_copyOpenTabLink" key="C" modifiers="accel,shift"/>
+    <key id="key_selectLastTab2" oncommand="gBrowser.selectTabAtIndex(-1, event);" key="`" modifiers="accel"/>
   </keyset>
 
 
