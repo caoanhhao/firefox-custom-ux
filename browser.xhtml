@@ -52,6 +52,7 @@
   <link rel="localization" href="browser/browserContext.ftl"/>
   <link rel="localization" href="browser/browserSets.ftl"/>
   <link rel="localization" href="browser/firefoxView.ftl"/>
+  <link rel="localization" href="browser/genai.ftl"/>
   <link rel="localization" href="browser/identityCredentialNotification.ftl" />
   <link rel="localization" href="browser/menubar.ftl"/>
   <link rel="localization" href="browser/originControls.ftl"/>
@@ -72,11 +73,12 @@
   <link rel="localization" href="toolkit/global/textActions.ftl"/>
   <link rel="localization" href="toolkit/printing/printUI.ftl"/>
   <!-- Untranslated FTL files -->
+  <link rel="localization" href="preview/credentialChooser.ftl" />
   <link rel="localization" href="preview/enUS-searchFeatures.ftl" />
   <link rel="localization" href="preview/interventions.ftl" />
   <link rel="localization" href="browser/shopping.ftl"/>
   <link rel="localization" href="preview/shopping.ftl"/>
-  <link rel="localization" href="preview/sidebar.ftl"/>
+  <link rel="localization" href="browser/sidebar.ftl"/>
   <link rel="localization" href="preview/profiles.ftl"/>
   <link rel="localization" href="preview/onboarding.ftl"/>
 
@@ -116,6 +118,7 @@ if (AppConstants.platform == "macosx") {
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-unified-extensions.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tab.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabbrowser.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabgroup.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabs.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/places/places-menupopup.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/autocomplete-popup.js", this);
@@ -179,7 +182,7 @@ if (AppConstants.platform == "macosx") {
     <command id="cmd_find" />
     <command id="cmd_findAgain" />
     <command id="cmd_findPrevious" />
-    <command id="cmd_reportBrokenSite" oncommand="ReportBrokenSite.open(event);" />
+    <command id="cmd_reportBrokenSite"/>
     <command id="cmd_translate" />
     <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs" />
@@ -518,17 +521,31 @@ if (AppConstants.platform == "macosx") {
          noautofocus="true"
          hidden="true" />
 
-  <panel id="searchmode-switcher-popup" noautofocus="true" orient="vertical" type="arrow">
+  <panel id="searchmode-switcher-popup"
+         class="panel-no-padding"
+         orient="vertical"
+         type="autocomplete-richlistbox"
+         role="menu"
+         aria-labelledby="searchmode-switcher-popup-description">
     <label data-l10n-id="urlbar-searchmode-popup-description" id="searchmode-switcher-popup-description" />
     <toolbarseparator />
     <vbox class="panel-subview-body"></vbox>
     <toolbarseparator />
-    <toolbarbutton oncommand="window.openPreferences('paneSearch');"
-                   class="subviewbutton subviewbutton-iconic"
-                   id="searchmode-switcher-popup-search-settings-button">
+    <toolbarbutton class="subviewbutton subviewbutton-iconic panel-subview-footer-button"
+                   data-action="openpreferences"
+                   id="searchmode-switcher-popup-search-settings-button"
+                   role="button"
+                   tabindex="0">
       <image id="searchmode-switcher-popup-search-settings-icon" />
       <label data-l10n-id="urlbar-searchmode-popup-search-settings" />
     </toolbarbutton>
+  </panel>
+
+  <panel class="panel-no-padding"
+         id="ask-chat-shortcuts"
+         noautofocus="true"
+         type="arrow">
+    <vbox class="panel-subview-body"/>
   </panel>
 
   <html:template id="screenshotsPagePanelTemplate">
@@ -780,6 +797,43 @@ if (AppConstants.platform == "macosx") {
     <menuitem data-l10n-id="sidebar-context-menu-report-extension"
               id="sidebar-context-menu-report-extension"
               contexttype="extension-action"/>
+  </menupopup>
+
+  <menupopup id="sidebar-history-menu">
+    <menuitem data-l10n-id="sidebar-history-sort-by-date"
+              id="sidebar-history-sort-by-date"
+              type="checkbox"/>
+    <menuitem data-l10n-id="sidebar-history-sort-by-site"
+              id="sidebar-history-sort-by-site"
+              type="checkbox"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="sidebar-history-clear"
+              id="sidebar-history-clear"/>
+  </menupopup>
+
+  <menupopup id="sidebar-history-context-menu">
+    <menuitem data-l10n-id="sidebar-history-context-menu-delete-page"
+              id="sidebar-history-context-delete-page"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="sidebar-context-menu-open-in-window"
+              id="sidebar-history-context-open-in-window"/>
+    <menuitem data-l10n-id="sidebar-context-menu-open-in-private-window"
+              id="sidebar-history-context-open-in-private-window"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="sidebar-context-menu-copy-link"
+              id="sidebar-history-context-copy-link"/>
+  </menupopup>
+
+  <menupopup id="sidebar-synced-tabs-context-menu">
+    <menuitem data-l10n-id="sidebar-context-menu-open-in-window"
+              id="sidebar-synced-tabs-context-open-in-window"/>
+    <menuitem data-l10n-id="sidebar-context-menu-open-in-private-window"
+              id="sidebar-synced-tabs-context-open-in-private-window"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="sidebar-context-menu-bookmark-tab"
+              id="sidebar-synced-tabs-context-bookmark-tab"/>
+    <menuitem data-l10n-id="sidebar-context-menu-copy-link"
+              id="sidebar-synced-tabs-context-copy-link"/>
   </menupopup>
 
   <menupopup id="toolbar-context-menu">
@@ -1477,7 +1531,8 @@ if (AppConstants.platform == "macosx") {
          orient="vertical"
          noautofocus="true"
          norolluponanchor="true"
-         consumeoutsideclicks="false">
+         consumeoutsideclicks="false"
+         role="tooltip">
     <html:div class="tab-preview-text-container">
       <html:div class="tab-preview-title"></html:div>
       <html:div class="tab-preview-uri"></html:div>
@@ -1749,10 +1804,29 @@ if (AppConstants.platform == "macosx") {
         </vbox>
       </popupnotificationfooter>
     </popupnotification>
-
+    <popupnotification id="credential-chooser-notification" hidden="true">
+      <popupnotificationheader id="credential-chooser-header" orient="horizontal">
+        <html:div id="credential-chooser-header-container">
+          <html:span id="credential-chooser-header-text"/>
+        </html:div>
+      </popupnotificationheader>
+      <popupnotificationcontent id="credential-chooser-entry" orient="vertical">
+        <html:div id="credential-chooser-entry-selector-container"/>
+        <html:template id="template-credential-entry-list-item">
+          <html:label class="identity-credential-list-item" align="center">
+            <html:input type="radio" name="credential-entry" class="identity-credential-list-item-radio"></html:input>
+            <html:img class="identity-credential-list-item-icon"/>
+            <html:div class="identity-credential-list-item-label-stack">
+              <html:div class="identity-credential-list-item-label-primary"/>
+              <html:div class="identity-credential-list-item-label-secondary" hidden="true"/>
+            </html:div>
+          </html:label>
+        </html:template>
+      </popupnotificationcontent>
+    </popupnotification>
     <popupnotification id="identity-credential-notification" hidden="true">
       <popupnotificationheader id="identity-credential-header" orient="horizontal" hidden="true">
-        <html:div class="identity-credential-header-container">
+        <html:div id="identity-credential-header-container">
           <html:img class="identity-credential-header-icon"></html:img>
           <span id="identity-credential-header-text"></span>
         </html:div>
@@ -2461,8 +2535,6 @@ if (AppConstants.platform == "macosx") {
        role="alertdialog"
        noautofocus="true"
        aria-labelledby="protections-popup-main-header-label"
-       onpopupshown="gProtectionsHandler.onPopupShown(event);ReportBrokenSite.updateParentMenu(event)"
-       onpopuphidden="gProtectionsHandler.onPopupHidden(event);"
        orient="vertical">
 
   <panelmultiview id="protections-popup-multiView"
@@ -2474,8 +2546,7 @@ if (AppConstants.platform == "macosx") {
                has-custom-header="true">
       <vbox id="protections-popup-mainView-panel-header-section">
         <box id="protections-popup-mainView-panel-header"
-             class="panel-header panel-header-with-additional-element panel-header-with-info-button"
-             onclick="gProtectionsHandler.onHeaderClicked(event);">
+             class="panel-header panel-header-with-additional-element panel-header-with-info-button">
           <html:h1 id="protections-popup-main-header-label">
             <html:span id="protections-popup-mainView-panel-header-span"/>
           </html:h1>
@@ -2520,33 +2591,28 @@ if (AppConstants.platform == "macosx") {
           <vbox id="protections-popup-content" flex="1">
             <vbox id="protections-popup-category-list">
               <toolbarbutton id="protections-popup-category-trackers"
-                             oncommand="gProtectionsHandler.showTrackersSubview(event); gProtectionsHandler.recordClick('trackers');"
                              class="protections-popup-category subviewbutton subviewbutton-iconic" align="center">
                 <image class="toolbarbutton-icon protections-popup-category-icon trackers-icon"/>
                 <label flex="1" class="toolbarbutton-text protections-popup-category-label" data-l10n-id="protections-panel-content-blocking-tracking-protection"></label>
               </toolbarbutton>
               <toolbarbutton id="protections-popup-category-socialblock"
-                             oncommand="gProtectionsHandler.showSocialblockerSubview(event); gProtectionsHandler.recordClick('social');"
                              class="protections-popup-category subviewbutton subviewbutton-iconic" align="center">
                 <image class="toolbarbutton-icon protections-popup-category-icon socialblock-icon"/>
                 <label flex="1"
                        class="toolbarbutton-text protections-popup-category-label" data-l10n-id="protections-panel-content-blocking-socialblock"></label>
               </toolbarbutton>
               <toolbarbutton id="protections-popup-category-cookies"
-                             oncommand="gProtectionsHandler.showCookiesSubview(event); gProtectionsHandler.recordClick('cookies');"
                              class="protections-popup-category subviewbutton subviewbutton-iconic" align="center">
                 <image class="toolbarbutton-icon protections-popup-category-icon thirdpartycookies-icon"/>
                 <label flex="1" id="protections-popup-cookies-category-label"
                        class="toolbarbutton-text protections-popup-category-label"/>
               </toolbarbutton>
               <toolbarbutton id="protections-popup-category-cryptominers"
-                             oncommand="gProtectionsHandler.showCryptominersSubview(event); gProtectionsHandler.recordClick('cryptominers');"
                              class="protections-popup-category subviewbutton subviewbutton-iconic" align="center">
                 <image class="toolbarbutton-icon protections-popup-category-icon cryptominers-icon"/>
                 <label flex="1" class="toolbarbutton-text protections-popup-category-label" data-l10n-id="protections-panel-content-blocking-cryptominers-label"></label>
               </toolbarbutton>
               <toolbarbutton id="protections-popup-category-fingerprinters"
-                             oncommand="gProtectionsHandler.showFingerprintersSubview(event); gProtectionsHandler.recordClick('fingerprinters');"
                              class="protections-popup-category subviewbutton subviewbutton-iconic" align="center">
                 <image class="toolbarbutton-icon protections-popup-category-icon fingerprinters-icon"/>
                 <label flex="1" class="toolbarbutton-text protections-popup-category-label" data-l10n-id="protections-panel-content-blocking-fingerprinters-label"></label>
@@ -2557,11 +2623,7 @@ if (AppConstants.platform == "macosx") {
                            aria-level="2" data-l10n-id="protections-panel-blocking-label"></description>
               <hbox id="protections-popup-not-blocking-section-header" class="protections-popup-section-header" flex="1">
                 <description id="protections-popup-not-blocking-section-description" flex="1" role="heading" aria-level="2" data-l10n-id="protections-panel-not-blocking-label"></description>
-                <label id="protections-popup-not-blocking-section-why"
-                       onmouseover="document.getElementById(event.target.tooltip).openPopup(event.target);"
-                       onfocus="document.getElementById(event.target.tooltip).openPopup(event.target);"
-                       onmouseout="document.getElementById(event.target.tooltip).hidePopup()"
-                       onblur="document.getElementById(event.target.tooltip).hidePopup()" data-l10n-id="protections-panel-not-blocking-why-label"></label>
+                <label id="protections-popup-not-blocking-section-why" data-l10n-id="protections-panel-not-blocking-why-label"></label>
               </hbox>
               <description id="protections-popup-not-found-section-header"
                            class="protections-popup-section-header"
@@ -2575,23 +2637,20 @@ if (AppConstants.platform == "macosx") {
       <toolbarseparator></toolbarseparator>
       <vbox id="protections-popup-footer" class="panel-subview-footer-button">
         <toolbarbutton id="protections-popup-settings-button"
-                       class="subviewbutton protections-popup-footer-button"
-                       oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('settings');">
+                       class="subviewbutton protections-popup-footer-button">
           <image class="protections-popup-footer-icon protections-popup-settings-icon"/>
           <label class="toolbarbutton-text protections-popup-footer-button-label" flex="1" data-l10n-id="protections-panel-settings-label"></label>
           <label id="protections-popup-footer-protection-type-label" class="toolbarbutton-text"></label>
         </toolbarbutton>
         <stack id="protections-popup-show-report-stack">
           <toolbarbutton id="protections-popup-show-report-button"
-                         class="subviewbutton protections-popup-footer-button"
-                         oncommand="gProtectionsHandler.openProtections(true); gProtectionsHandler.recordClick('full_report');">
+                         class="subviewbutton protections-popup-footer-button">
             <image class="protections-popup-footer-icon protections-popup-show-report-icon"/>
             <label class="toolbarbutton-text protections-popup-footer-button-label" flex="1" data-l10n-id="protections-panel-protectionsdashboard-label"></label>
           </toolbarbutton>
           <hbox id="protections-popup-trackers-blocked-counter-box"
                 align="center">
-            <description id="protections-popup-trackers-blocked-counter-description"
-                         onclick="gProtectionsHandler.openProtections(true);"/>
+            <description id="protections-popup-trackers-blocked-counter-description"/>
           </hbox>
         </stack>
 
@@ -2599,8 +2658,7 @@ if (AppConstants.platform == "macosx") {
         <hbox id="protections-popup-milestones" class="protections-popup-section">
           <toolbarbutton id="protections-popup-milestones-content"
                          class="subviewbutton"
-                         flex="1"
-                         oncommand="gProtectionsHandler.openProtections(true); gProtectionsHandler.recordClick('milestone_message');">
+                         flex="1">
             <label id="protections-popup-milestones-text" flex="1"
                    role="heading" aria-level="2"/>
             <image id="protections-popup-milestones-illustration"/>
@@ -2611,7 +2669,6 @@ if (AppConstants.platform == "macosx") {
         <hbox id="protections-popup-cookie-banner-section" class="protections-popup-section" uiDisabled="true" enabled="true" flex="1">
           <toolbarbutton id="protections-popup-cookie-banner-switch"
                          class="subviewbutton subviewbutton-nav"
-                         onclick="gProtectionsHandler.onCookieBannerClick()"
                          flex="1">
             <vbox flex="1">
               <label role="heading" class="protections-popup-switch-header" aria-level="2" data-l10n-id="protections-panel-cookie-banner-blocker-header"></label>
@@ -2650,8 +2707,7 @@ if (AppConstants.platform == "macosx") {
         <toolbarseparator></toolbarseparator>
         <toolbarbutton id="protections-popup-trackersView-settings-button"
                 data-l10n-id="protections-panel-content-blocking-manage-settings"
-                class="subviewbutton panel-subview-footer-button"
-                oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'trackers');"/>
+                class="subviewbutton panel-subview-footer-button"/>
     </panelview>
 
     <!-- Social Block SubView -->
@@ -2680,8 +2736,7 @@ if (AppConstants.platform == "macosx") {
         <toolbarseparator></toolbarseparator>
         <toolbarbutton id="protections-popup-socialblockView-settings-button"
                 data-l10n-id="protections-panel-content-blocking-manage-settings"
-                class="subviewbutton panel-subview-footer-button"
-                oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'social');"/>
+                class="subviewbutton panel-subview-footer-button"/>
     </panelview>
 
     <!-- Cookies SubView -->
@@ -2697,8 +2752,7 @@ if (AppConstants.platform == "macosx") {
         <toolbarseparator></toolbarseparator>
         <toolbarbutton id="protections-popup-cookiesView-settings-button"
                   data-l10n-id="protections-panel-content-blocking-manage-settings"
-                  class="subviewbutton panel-subview-footer-button"
-                  oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'cookies');"/>
+                  class="subviewbutton panel-subview-footer-button"/>
     </panelview>
 
     <!-- Fingerprinters SubView -->
@@ -2727,8 +2781,7 @@ if (AppConstants.platform == "macosx") {
         <toolbarseparator></toolbarseparator>
         <toolbarbutton id="protections-popup-fingerprintersView-settings-button"
                   data-l10n-id="protections-panel-content-blocking-manage-settings"
-                  class="subviewbutton panel-subview-footer-button"
-                  oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'fingerprinters');"/>
+                  class="subviewbutton panel-subview-footer-button"/>
     </panelview>
 
     <!-- Cryptominers SubView -->
@@ -2757,8 +2810,7 @@ if (AppConstants.platform == "macosx") {
         <toolbarseparator></toolbarseparator>
         <toolbarbutton id="protections-popup-cryptominersView-settings-button"
                   data-l10n-id="protections-panel-content-blocking-manage-settings"
-                  class="subviewbutton panel-subview-footer-button"
-                  oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'cryptominers');"/>
+                  class="subviewbutton panel-subview-footer-button"/>
     </panelview>
 
     <!-- Cookie Banner SubView -->
@@ -2776,16 +2828,13 @@ if (AppConstants.platform == "macosx") {
         <html:moz-button-group class="panel-footer protections-popup-cookieBannerView-footer">
           <button id="protections-popup-cookieBannerView-cancel"
                     data-l10n-id="protections-panel-cookie-banner-view-cancel-label"
-                    oncommand="gProtectionsHandler._protectionsPopupMultiView.goBack();"
                     class="footer-button" />
           <button id="protections-popup-cookieBannerView-enable-button"
                     data-l10n-id="protections-panel-cookie-banner-view-turn-on-label"
-                    oncommand="gProtectionsHandler.onCookieBannerToggleCommand()"
                     default="true"
                     class="footer-button" />
           <button id="protections-popup-cookieBannerView-disable-button"
                     data-l10n-id="protections-panel-cookie-banner-view-turn-off-label"
-                    oncommand="gProtectionsHandler.onCookieBannerToggleCommand()"
                     default="true"
                     class="footer-button" />
         </html:moz-button-group>
@@ -3156,10 +3205,7 @@ if (AppConstants.platform == "macosx") {
        type="arrow"
        role="alertdialog"
        noautofocus="true"
-       orient="vertical"
-       onclick="FullPageTranslationsPanel.handlePanelButtonEvent(event)"
-       onpopupshown="FullPageTranslationsPanel.handlePanelPopupShownEvent(event)"
-       onpopuphidden="FullPageTranslationsPanel.handlePanelPopupHiddenEvent(event)">
+       orient="vertical">
   <panelmultiview id="full-page-translations-panel-multiview"
                   mainViewId="full-page-translations-panel-view-default">
     <panelview id="full-page-translations-panel-view-default"
@@ -3178,8 +3224,7 @@ if (AppConstants.platform == "macosx") {
         <toolbarbutton id="translations-panel-settings"
                        class="panel-info-button translations-panel-settings-gear-icon"
                        data-l10n-id="translations-panel-settings-button"
-                       closemenu="none"
-                       oncommand="FullPageTranslationsPanel.openSettingsPopup(this)"/>
+                       closemenu="none"/>
       </hbox>
 
       <vbox class="translations-panel-content">
@@ -3188,8 +3233,7 @@ if (AppConstants.platform == "macosx") {
           <html:a id="full-page-translations-panel-intro-learn-more-link"
                   is="moz-support-link"
                   data-l10n-id="translations-panel-learn-more-link"
-                  support-page="website-translation"
-                  onclick="FullPageTranslationsPanel.onLearnMoreLink()" />
+                  support-page="website-translation" />
         </html:div>
         <vbox id="full-page-translations-panel-lang-selection">
           <label data-l10n-id="translations-panel-from-label" id="full-page-translations-panel-from-label"></label>
@@ -3197,8 +3241,7 @@ if (AppConstants.platform == "macosx") {
                     flex="1"
                     value="detect"
                     size="large"
-                    aria-labelledby="full-page-translations-panel-from-label"
-                    oncommand="FullPageTranslationsPanel.onChangeFromLanguage(event)">
+                    aria-labelledby="full-page-translations-panel-from-label">
             <menupopup id="full-page-translations-panel-from-menupopup"
                       class="translations-panel-language-menupopup-from">
               <menuitem data-l10n-id="translations-panel-choose-language" value=""></menuitem>
@@ -3211,8 +3254,7 @@ if (AppConstants.platform == "macosx") {
                     flex="1"
                     value="detect"
                     size="large"
-                    aria-labelledby="full-page-translations-panel-to-label"
-                    oncommand="FullPageTranslationsPanel.onChangeToLanguage(event)">
+                    aria-labelledby="full-page-translations-panel-to-label">
             <menupopup id="full-page-translations-panel-to-menupopup"
                       class="translations-panel-language-menupopup-to">
               <menuitem data-l10n-id="translations-panel-choose-language" value=""></menuitem>
@@ -3236,17 +3278,14 @@ if (AppConstants.platform == "macosx") {
       <html:moz-button-group class="panel-footer translations-panel-footer translations-panel-button-group">
         <button id="full-page-translations-panel-restore-button"
                 class="footer-button"
-                oncommand="FullPageTranslationsPanel.onRestore(event);"
                 data-l10n-id="translations-panel-restore-button">
         </button>
         <button id="full-page-translations-panel-cancel"
                 class="footer-button"
-                oncommand="FullPageTranslationsPanel.onCancel(event);"
                 data-l10n-id="translations-panel-translate-cancel">
         </button>
         <button id="full-page-translations-panel-translate"
                 class="footer-button"
-                oncommand="FullPageTranslationsPanel.onTranslate(event);"
                 data-l10n-id="translations-panel-translate-button"
                 default="true">
         </button>
@@ -3271,20 +3310,17 @@ if (AppConstants.platform == "macosx") {
           <html:a id="full-page-translations-panel-unsupported-learn-more-link"
                   is="moz-support-link"
                   data-l10n-id="translations-panel-learn-more-link"
-                  support-page="website-translation"
-                  onclick="FullPageTranslationsPanel.onLearnMoreLink()" />
+                  support-page="website-translation" />
         </html:div>
       </vbox>
 
       <html:moz-button-group class="panel-footer translations-panel-footer">
         <button id="full-page-translations-panel-change-source-language"
                 class="footer-button"
-                oncommand="FullPageTranslationsPanel.onChangeSourceLanguage(event);"
                 data-l10n-id="translations-panel-error-change-button">
         </button>
         <button id="full-page-translations-panel-dismiss-error"
                 class="footer-button"
-                oncommand="FullPageTranslationsPanel.onCancel(event);"
                 data-l10n-id="translations-panel-error-dismiss-button"
                 default="true">
         </button>
@@ -3399,9 +3435,9 @@ if (AppConstants.platform == "macosx") {
   <svg id="swipe-nav-icon" class="swipe-nav-icon"
        width="66" height="66" viewBox="0 0 66 66" fill="none"
        xmlns="http://www.w3.org/2000/svg">
-  <circle cx="33" cy="33" r="30" />
-  <circle cx="33" cy="33" r="12" />
-  <path d="M37.6481 32.9253H29.2578L32.4489 29.7341C32.5321 29.6465 32.5778 29.5298 32.5763 29.4089C32.5747 29.288 32.526 29.1725 32.4405 29.087C32.355 29.0015 32.2395 28.9528 32.1186 28.9512C31.9977 28.9496 31.881 28.9954 31.7933 29.0786L27.7408 33.1334V33.6438L31.7941 37.6978C31.837 37.741 31.888 37.7753 31.9442 37.7987C32.0004 37.8221 32.0606 37.8341 32.1215 37.8341C32.1823 37.8341 32.2426 37.8221 32.2988 37.7987C32.355 37.7753 32.406 37.741 32.4489 37.6978C32.5354 37.6107 32.584 37.4929 32.584 37.3701C32.584 37.2473 32.5354 37.1294 32.4489 37.0423L29.2578 33.8512H37.6481C37.7709 33.8512 37.8887 33.8024 37.9755 33.7156C38.0623 33.6288 38.1111 33.511 38.1111 33.3882C38.1111 33.2654 38.0623 33.1477 37.9755 33.0609C37.8887 32.974 37.7709 32.9253 37.6481 32.9253Z" />
+  <circle class="swipe-nav-icon-circle-outline" cx="33" cy="33" r="30" />
+  <circle class="swipe-nav-icon-circle" cx="33" cy="33" r="12" />
+  <path class="swipe-nav-icon-arrow" d="M37.6481 32.9253H29.2578L32.4489 29.7341C32.5321 29.6465 32.5778 29.5298 32.5763 29.4089C32.5747 29.288 32.526 29.1725 32.4405 29.087C32.355 29.0015 32.2395 28.9528 32.1186 28.9512C31.9977 28.9496 31.881 28.9954 31.7933 29.0786L27.7408 33.1334V33.6438L31.7941 37.6978C31.837 37.741 31.888 37.7753 31.9442 37.7987C32.0004 37.8221 32.0606 37.8341 32.1215 37.8341C32.1823 37.8341 32.2426 37.8221 32.2988 37.7987C32.355 37.7753 32.406 37.741 32.4489 37.6978C32.5354 37.6107 32.584 37.4929 32.584 37.3701C32.584 37.2473 32.5354 37.1294 32.4489 37.0423L29.2578 33.8512H37.6481C37.7709 33.8512 37.8887 33.8024 37.9755 33.7156C38.0623 33.6288 38.1111 33.511 38.1111 33.3882C38.1111 33.2654 38.0623 33.1477 37.9755 33.0609C37.8887 32.974 37.7709 32.9253 37.6481 32.9253Z" />
   </svg>
   </hbox>
 
@@ -4915,9 +4951,11 @@ if (AppConstants.platform == "macosx") {
       <hbox flex="1" align="end" class="toolbar-items">
         <toolbartabstop/>
         <hbox id="TabsToolbar-customization-target" flex="1">
+          <!-- custom firefox menu button -->
           <toolbarbutton id="PanelUI-menu-button"
                         class="toolbarbutton-1"
                         badged="true"
+                        consumeanchor="PanelUI-button"
                         data-l10n-id="appmenu-menu-button-closed2"/>
           
           <!-- <toolbarbutton id="firefox-view-button"
@@ -4935,9 +4973,19 @@ if (AppConstants.platform == "macosx") {
                 aria-multiselectable="true"
                 setfocus="false"
                 tooltip="tabbrowser-tab-tooltip"
+                orient="horizontal"
                 stopwatchid="FX_TAB_CLICK_MS">
             <hbox class="tab-drop-indicator" hidden="true"/>
-            <arrowscrollbox id="tabbrowser-arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true" scrolledtostart="true" scrolledtoend="true">
+            <html:div id="vertical-pinned-tabs-container"></html:div>
+            <html:div id="newtab-button-container">
+              <toolbarbutton id="vertical-tabs-newtab-button"
+                                  class="toolbarbutton-1"
+                                  command="cmd_newNavigatorTab"
+                                  onclick="gBrowser.handleNewTabMiddleClick(this, event);"
+                                  tooltip="dynamic-shortcut-tooltip"
+                                  data-l10n-id="tabs-toolbar-new-tab"/>
+            </html:div>
+            <arrowscrollbox id="tabbrowser-arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="" scrolledtostart="" scrolledtoend="">
               <tab is="tabbrowser-tab" class="tabbrowser-tab" selected="true" visuallyselected="" fadein=""/>
               <hbox id="tabbrowser-arrowscrollbox-periphery">
                 <toolbartabstop/>
@@ -5203,17 +5251,6 @@ if (AppConstants.platform == "macosx") {
                        data-l10n-id="urlbar-storage-access-anchor"/>
               </box>
             </box>
-            <toolbarbutton id="urlbar-searchmode-switcher"
-                           data-l10n-id="urlbar-searchmode-button"
-                           onmousedown="SearchModeSwitcher.openPanel(this, event)" onkeypress="SearchModeSwitcher.openPanel(this, event)"
-                           align="center" noautofocus="true" tooltip="dynamic-shortcut-tooltip" class="chromeclass-toolbar-additional">
-              <image id="searchmode-switcher-icon" />
-              <label id="searchmode-switcher-title" />
-              <image id="searchmode-switcher-dropmarker" data-l10n-id="urlbar-searchmode-dropmarker"
-                     class="toolbarbutton-icon toolbarbutton-combined-buttons-dropmarker" />
-              <toolbarbutton id="searchmode-switcher-close" noautofocus="true" class="toolbarbutton-icon close-button"
-                             onmousedown="SearchModeSwitcher.exitSearchMode(this, event)" />
-            </toolbarbutton>
             <box id="urlbar-label-box" align="center">
               <label id="urlbar-label-switchtab" class="urlbar-label" data-l10n-id="urlbar-switch-to-tab"/>
               <label id="urlbar-label-extension" class="urlbar-label" data-l10n-id="urlbar-extension"/>
@@ -5222,32 +5259,64 @@ if (AppConstants.platform == "macosx") {
             <html:div id="urlbar-search-mode-indicator">
               <html:span id="urlbar-search-mode-indicator-title"/>
               <html:div id="urlbar-search-mode-indicator-close"
-                     class="close-button"
-                     role="button"
-                     aria-labelledby="urlbar-search-mode-indicator-close urlbar-search-mode-indicator-title"
-                     data-l10n-id="urlbar-search-mode-indicator-close"/>
+                        class="close-button"
+                        role="button"
+                        aria-labelledby="urlbar-search-mode-indicator-close urlbar-search-mode-indicator-title"
+                        data-l10n-id="urlbar-search-mode-indicator-close"/>
             </html:div>
-            <moz-input-box tooltip="aHTMLTooltip"
-                           class="urlbar-input-box"
-                           flex="1"
-                           role="combobox"
-                           aria-owns="urlbar-results">
-              <html:input id="urlbar-scheme"
-                          required="required"/>
-              <html:input id="urlbar-input"
-                          class="urlbar-input"
-                          anonid="input"
-                          aria-controls="urlbar-results"
-                          aria-autocomplete="both"
-                          inputmode="mozAwesomebar"
-                          data-l10n-id="urlbar-placeholder"
-                          data-l10n-attrs="placeholder"/>
-            </moz-input-box>
+            <hbox class="urlbar-searchmode-and-input-box-container" flex="1">
+              <toolbarbutton id="urlbar-searchmode-switcher"
+                             data-action="openpopup"
+                             align="center"
+                             role="button"
+                             aria-haspopup="menu"
+                             aria-expanded="false"
+                             tooltip="dynamic-shortcut-tooltip"
+                             class="chromeclass-toolbar-additional">
+                <image id="searchmode-switcher-icon" />
+                <image id="searchmode-switcher-dropmarker"
+                       data-l10n-id="urlbar-searchmode-dropmarker"
+                       class="toolbarbutton-icon toolbarbutton-combined-buttons-dropmarker" />
+              </toolbarbutton>
+              <box id="searchmode-switcher-chicklet">
+                <label id="searchmode-switcher-title" />
+                <toolbarbutton id="searchmode-switcher-close"
+                               data-action="exitsearchmode"
+                               role="button"
+                               tooltip="dynamic-shortcut-tooltip"
+                               class="toolbarbutton-icon close-button" />
+              </box>
+              <moz-input-box tooltip="aHTMLTooltip"
+                             class="urlbar-input-box"
+                             flex="1"
+                             role="combobox"
+                             aria-owns="urlbar-results">
+                <html:input id="urlbar-scheme"
+                            required="required"/>
+                <html:input id="urlbar-input"
+                            class="urlbar-input"
+                            anonid="input"
+                            aria-controls="urlbar-results"
+                            aria-autocomplete="both"
+                            inputmode="mozAwesomebar"
+                            data-l10n-id="urlbar-placeholder"
+                            data-l10n-attrs="placeholder"/>
+              </moz-input-box>
+              <image class="urlbar-icon urlbar-revert-button"
+                     role="button"
+                     onclick="gURLBar.handleRevert(true)"
+                     data-l10n-id="urlbar-revert-button"/>
+            </hbox>
             <image class="urlbar-icon urlbar-go-button"
                    role="button"
                    keyNav="false"
                    onclick="gURLBar.handleCommand(event);"
                    data-l10n-id="urlbar-go-button"/>
+            <image class="urlbar-icon urlbar-show-page-actions-button"
+                   role="button"
+                   onclick="gURLBar.handleRevert(true)"
+                   data-l10n-id="urlbar-show-page-actions-button"
+                   align="center"/>
             <hbox id="page-action-buttons" context="pageActionContextMenu" align="center">
               <toolbartabstop/>
               <hbox id="contextual-feature-recommendation" role="button" hidden="true">
@@ -5629,8 +5698,7 @@ if (AppConstants.platform == "macosx") {
 <hbox flex="1" id="browser">
   <box context="sidebar-context-menu" id="sidebar-main" hidden="true">
     <html:sidebar-main flex="1">
-    <html:div id="vertical-tabs" slot="tabstrip">
-    </html:div>
+    <html:div id="vertical-tabs" slot="tabstrip" customizable="true"></html:div>
   </html:sidebar-main>
   </box>
   <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
@@ -5689,7 +5757,7 @@ if (AppConstants.platform == "macosx") {
 <checkbox id="customization-titlebar-visibility-checkbox" class="customization-checkbox"
           oncommand="gCustomizeMode.toggleTitlebar(this.checked)" data-l10n-id="customize-mode-titlebar"/>
 <button id="customization-toolbar-visibility-button" class="footer-button" type="menu" data-l10n-id="customize-mode-toolbars">
-  <menupopup id="customization-toolbar-menu" onpopupshowing="if (event.target == this) onViewToolbarsPopupShowing(event)"/>
+  <menupopup id="customization-toolbar-menu" onpopupshowing="if (event.target == this) ToolbarContextMenu.onViewToolbarsPopupShowing(event)"/>
 </button>
 <button id="customization-uidensity-button"
         data-l10n-id="customize-mode-uidensity"
