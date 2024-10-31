@@ -17,8 +17,6 @@
     /*  In customizing page    */
   }
 
- 
-
   /* display #navigator-toolbox when mouse out current browser */
   &:has(.deck-selected .browserStack browser:not(:hover)),
   /* display #navigator-toolbox when main menu open  */
@@ -27,6 +25,13 @@
     &:has(#urlbar:not([breakout-extend])) {
       #navigator-toolbox {
         transform: translateY(0);
+      }
+
+      /* display #urlbar when urlbar's position is absolute (change by javascript) */
+      #urlbar {
+        &:is([breakout-extend-animate]) {
+          top: 36px !important;
+        }
       }
     }
 
@@ -121,8 +126,10 @@
       justify-content: center;
 
       #urlbar {
-/*         width: auto !important; */
-        overflow: hidden;
+        /* hide #urlbar when urlbar's position is absolute (change by javascript) */
+        &:is([breakout-extend-animate]) {
+          top: -40px !important;
+        }
 
         &:is([breakout-extend]) {
           width: 30vw !important;
