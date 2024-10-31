@@ -30,6 +30,7 @@
       /* display #urlbar when urlbar's position is absolute (change by javascript) */
       #urlbar {
         &:is([breakout-extend-animate]) {
+          transition: 0.2s cubic-bezier(.36,-0.01,0,.77) !important;
           top: 36px !important;
         }
       }
