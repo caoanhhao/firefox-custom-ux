@@ -155,3 +155,10 @@
     background: transparent !important;
   }
 }
+
+/*  Hide update popup  */
+#appMenu-notification-popup {
+  &:has(#appMenu-update-available-notification) {
+    display: none !important;
+  }
+}
